@@ -8,13 +8,13 @@
 <body>
 <div>
     <h1>Create Account</h1>
-    <form action="/create" method="post">
+    <form action="/create" method="post" enctype="multipart/form-data">
         <!-- phone -->
         <input class="form-control" type="text" id="phone" name="phone" placeholder="phone">
         <!-- pass -->
         <input class="form-control" type="password" id="pass" name="pass" placeholder="password">
         <!-- status -->
-        <input class="form-control" type="text" id="status" name="status" placeholder="status">
+        <input class="form-control" type="text" id="gender" name="gender" >
         <!-- create-at -->
         <button type="submit" value="Create Account">Create Account</button>
     </form>   
