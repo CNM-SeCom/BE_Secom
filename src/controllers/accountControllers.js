@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 const AWS = require('aws-sdk');
+const jwt = require('jsonwebtoken');
 
 process.env.AWS_SDk_JS_SUPPRESS_MAITENANCE_MODE_MESSAGE = '1';
 
@@ -45,7 +46,7 @@ const login = async (req, res) => {
           const result = await comparePassword(pass, account.Items[0].pass);
     
           if (result) {
-            console.log("Login success");
+            
             const userId = account.Items[0].idUser;
             
             // Truy vấn dữ liệu người dùng từ bảng user bằng ID người dùng
@@ -57,15 +58,22 @@ const login = async (req, res) => {
             };
     
             const userData = await dynamodb.get(userParams).promise();
-            console.log(userData.Item);
-            return res.status(200).json({ success: true, message: "Login success", account: account.Items[0], user: userData.Item});
+            console.log(userData.Item.refreshToken)
+            // if(userData.Item.refreshToken) {
+            //   return res.status(401).json({ success: false, message: "Tài khoản đang đăng nhập ở nơi khác" });
+            // }
+            const tokens = generateTokens(userData.Item)
+            updateRefreshToken(userData.Item.idUser, tokens.refreshToken)
+            console.log(tokens.accessToken, tokens.refreshToken)
+                       
+            return res.status(200).json({ success: true, message: "Đăng nhập thành công", token: tokens, user: userData.Item});
           } else {
             console.log("Login failed: incorrect password");
-            return res.status(401).json({ success: false, message: "Incorrect password" });
+            return res.status(401).json({ success: false, message: "Mật khẩu không đúng" });
           }
         } else {
           console.log("Account not found");
-          return res.status(404).json({ success: false, message: "Account not found" });
+          return res.status(404).json({ success: false, message: "Không tìm thấy tài khoản" });
         }
       } catch (error) {
         console.log("Error", error);
@@ -73,10 +81,10 @@ const login = async (req, res) => {
       }
 }
 
-//get all accounts
 const createAccount = async (req, res) => {
   try {
-    const { phone, pass, gender } = req.body;
+    const { phone, pass, name,gender } = req.body;
+    console.log(phone, pass, name, gender)
     const paramsAccount= {TableName:tableName,
         Item : {
             id: Date.now().toString(),
@@ -94,10 +102,11 @@ const createAccount = async (req, res) => {
             idUser: paramsAccount.Item.idUser,
             phone: phone,
             email:'Chưa cập nhật',
-            name: 'User'+ paramsAccount.Item.id,
+            name: name,
             address: 'Chưa cập nhật',
             gender: gender,
-            avatar : gender === 'Nam' ? 'https://res.cloudinary.com/dkwb3ddwa/image/upload/v1710070408/avataDefaultSeCom/amafsgal21le2xhy4jgy.jpg' : 'https://res.cloudinary.com/dkwb3ddwa/image/upload/v1710070408/avataDefaultSeCom/jfvpv2c7etp65u8ssaff.jpg'
+            avatar : gender == '0' ? 'https://res.cloudinary.com/dkwb3ddwa/image/upload/v1710070408/avataDefaultSeCom/amafsgal21le2xhy4jgy.jpg' : 'https://res.cloudinary.com/dkwb3ddwa/image/upload/v1710070408/avataDefaultSeCom/jfvpv2c7etp65u8ssaff.jpg',
+            refreshToken: ''
           },
         };
        
@@ -109,7 +118,7 @@ const createAccount = async (req, res) => {
         else {
           await dynamodb.put(paramsAccount).promise();
           await dynamodb.put(paramsUser).promise();
-          return res.redirect("/");
+          return res.status(200).json({ success: true, message: "Create account success" });
         }
       }catch (error) {
         console.log("Error", error);
@@ -117,26 +126,132 @@ const createAccount = async (req, res) => {
       }
 }
 
+// //get all accounts
+// const getAllAccounts = async (req, res) => {
+//     try {
+//         const params = { TableName:tableName};
+//         const account = await dynamodb.scan(params).promise();
+//         // console.log(account.Items);
+//         // const result = await comparePassword('abc', '$2b$10$st3iDHhk5TUSsfKH2tGWy.hQ2tBlONOKrH.EXFq7bOcnjuuQvVhV2');
+//         // console.log(result);      
+//         return res.render('createAccount');
+//     } catch (error) {
+//         console.log("Error", error);
+//         return res.status(500).json({ "Iteration failed": error });
+//     }
+// }
+const generateTokens = payload => {
+	const { idUser, name } = payload
+  console.log(idUser);
+  console.log(name);
 
+	// Create JWT
+	const accessToken = jwt.sign(
+		{ idUser, name },
+		process.env.ACCESS_TOKEN_SECRET,
+		{
+			expiresIn: '10m'
+		}
+    
+	)
 
+	const refreshToken = jwt.sign(
+		{ idUser, name },
+		process.env.REFRESH_TOKEN_SECRET,
+		{
+			expiresIn: '1d'
+		}
+	)
 
-//get all accounts
-const getAllAccounts = async (req, res) => {
-    try {
-        const params = { TableName:tableName};
-        const account = await dynamodb.scan(params).promise();
-        // console.log(account.Items);
-        // const result = await comparePassword('abc', '$2b$10$st3iDHhk5TUSsfKH2tGWy.hQ2tBlONOKrH.EXFq7bOcnjuuQvVhV2');
-        // console.log(result);      
-        return res.render('createAccount');
-    } catch (error) {
-        console.log("Error", error);
-        return res.status(500).json({ "Iteration failed": error });
+	return { accessToken, refreshToken }
+}
+const updateRefreshToken = async (idUser, refreshToken) => {
+  try {
+    // Sử dụng phương thức get để lấy dữ liệu của mục cần cập nhật
+    const getUserParams = {
+      TableName: userTable,
+      Key: {
+        idUser: idUser
+      }
+    };
+
+    const user = await dynamodb.get(getUserParams).promise();
+    console.log("User:", user)
+
+    // Kiểm tra xem mục có tồn tại không
+    if (!user.Item) {
+      console.error('User not found');
+      return null; // Hoặc thực hiện xử lý lỗi khác tùy vào yêu cầu của bạn
     }
+
+    // Cập nhật refreshToken trong dữ liệu của mục
+    user.Item.refreshToken = refreshToken;
+
+    // Sử dụng phương thức update để cập nhật mục
+    const updateParams = {
+      TableName: userTable,
+      Key: {
+        idUser: idUser
+      },
+      UpdateExpression: 'SET refreshToken = :refreshToken',
+      ExpressionAttributeValues: {
+        ':refreshToken': refreshToken
+      },
+      ReturnValues: 'ALL_NEW'
+    };
+
+    const updatedUser = await dynamodb.update(updateParams).promise();
+    console.log('Refresh token updated:', updatedUser);
+    
+    return updatedUser;
+  } catch (error) {
+    console.error('Error updating refresh token:', error);
+    throw error;
+  }
+};
+const updateAccessToken = async (req, res) => {
+	const refreshToken = req.body.refreshToken
+  const idUser = req.body.idUser
+	if (!refreshToken) return res.sendStatus(401)
+  const getUserParams = {
+    TableName: userTable,
+    Key: {
+      idUser: idUser
+    }
+  };
+
+  const user = await dynamodb.get(getUserParams).promise();
+	if (!user||user.Item.refreshToken!=refreshToken) return res.status(500).json({ "Failed": "Refresh token not found"});
+
+	try {
+		jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
+
+		const tokens = generateTokens(user)
+		updateRefreshToken(user.Item.idUser, tokens.refreshToken)
+
+		res.json(tokens)
+	} catch (error) {
+		console.log(error)
+		res.sendStatus(403)
+	}
+}
+const logout = async (req, res) => {
+  const idUser = req.body.idUser
+  const getUserParams = {
+    TableName: userTable,
+    Key: {
+      idUser: idUser
+    }
+  };
+  const user = await dynamodb.get(getUserParams).promise();
+	await updateRefreshToken(user.Item.idUser, "")
+
+	res.status(200).json({ success: true, message: "logout success" });
 }
 
 module.exports = {
     login,
     createAccount,
-    getAllAccounts
+    updateAccessToken,
+    logout
 }

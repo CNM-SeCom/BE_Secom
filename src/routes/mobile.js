@@ -1,9 +1,13 @@
-const { login, createAccount, getAllAccounts } = require('../controllers/accountControllers');
+const { login, createAccount, updateAccessToken, logout } = require('../controllers/accountControllers');
 const multer = require('multer');
 const express = require('express');
 const router = express.Router();
 require('dotenv').config();
 const path = require('path');
+const { verify } = require('jsonwebtoken');
+const verifyToken = require('../middleware/auth');
+const {sendSMS} = require('../controllers/otpController')
+
 
 // Cấu hình lưu trữ tệp với multer
 const storage = multer.memoryStorage({
@@ -42,13 +46,21 @@ function checkFileType(file, callback) {
     }
 }
 
-// Route GET để hiển thị tất cả các tài khoản
-router.get("/", getAllAccounts);
+// // Route GET để hiển thị tất cả các tài khoản
+// router.get("/", getAllAccounts);
 
 // Route POST để tạo tài khoản mới
 router.post("/create", upload.single('img'), createAccount);
 
 // Route POST để đăng nhập
 router.post("/login", login);
+// update access token
+router.post("/updateAccessToken", updateAccessToken);
+// Route POST để đăng xuất
+router.post("/logout",verifyToken, logout);
+// Route POST để gửi tin nhắn
+router.post("/sendSMS", sendSMS);
+
+
 
 module.exports = router;
