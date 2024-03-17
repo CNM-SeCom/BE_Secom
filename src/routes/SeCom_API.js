@@ -1,4 +1,4 @@
-const { login, createAccount, updateAccessToken, logout } = require('../controllers/accountControllers');
+const { login, createAccount, updateAccessToken, logout } = require('../controllers/authControllers');
 const multer = require('multer');
 const express = require('express');
 const router = express.Router();
@@ -6,7 +6,10 @@ require('dotenv').config();
 const path = require('path');
 const { verify } = require('jsonwebtoken');
 const verifyToken = require('../middleware/auth');
-const {sendSMS} = require('../controllers/otpController')
+const {createChat, getChatByUserId} = require('../controllers/chatController')
+// const {sendSMS} = require('../controllers/otpController')
+const {sendRequestAddFriend, getListUserByName} = require('../controllers/userController')
+const {loadMessageByChatId} = require('../controllers/webSocketController')
 
 
 // Cấu hình lưu trữ tệp với multer
@@ -58,8 +61,18 @@ router.post("/login", login);
 router.post("/updateAccessToken", updateAccessToken);
 // Route POST để đăng xuất
 router.post("/logout",verifyToken, logout);
-// Route POST để gửi tin nhắn
-router.post("/sendSMS", sendSMS);
+// // Route POST để gửi tin nhắn
+// router.post("/sendSMS", sendSMS);
+// router để tạo chat
+router.post("/createChat", createChat);
+// router gửi lời mời kết bạn
+router.post("/sendRequestAddFriend",verifyToken, sendRequestAddFriend);
+// router lấy danh sách người dùng theo tên
+router.post("/getListUserByName", getListUserByName);
+// lấy danh sách đoạn chat
+router.post("/getChatByUserId",verifyToken, getChatByUserId);
+// lấy danh sách tin nhắn theo chat id
+router.post("/getMessageByChatId", loadMessageByChatId);
 
 
 

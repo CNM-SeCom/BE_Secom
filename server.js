@@ -1,7 +1,7 @@
 require('dotenv').config();
 const AWS = require('aws-sdk');
 const express = require('express');
-const mobileRouter = require('./src/routes/mobile');
+const ApiRouter = require('./src/routes/SeCom_API');
 
 
 
@@ -21,7 +21,7 @@ const wss = new WebSocket.Server({ port: 3001 });
 
 
 configViewEngine(app);
-app.use('/', mobileRouter);
+app.use('/', ApiRouter);
 
 
 app.use('/ws', wsRoutes);
