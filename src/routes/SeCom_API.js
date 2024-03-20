@@ -8,7 +8,9 @@ const { verify } = require('jsonwebtoken');
 const verifyToken = require('../middleware/auth');
 const {createChat, getChatByUserId} = require('../controllers/chatController')
 // const {sendSMS} = require('../controllers/otpController')
-const {sendRequestAddFriend, getListUserByName} = require('../controllers/userController')
+const {sendRequestAddFriend, getListUserByName, getRequestAddFriendByUserId,
+acceptRequestAddFriend
+} = require('../controllers/userController')
 const {loadMessageByChatId} = require('../controllers/webSocketController')
 
 
@@ -73,6 +75,10 @@ router.post("/getListUserByName", getListUserByName);
 router.post("/getChatByUserId",verifyToken, getChatByUserId);
 // lấy danh sách tin nhắn theo chat id
 router.post("/getMessageByChatId", loadMessageByChatId);
+//lấy danh sách lời mời kết bạn
+router.post("/getRequestAddFriendByUserId", getRequestAddFriendByUserId);
+//chấp nhận kết bạn
+router.post("/acceptRequestAddFriend", acceptRequestAddFriend);
 
 
 

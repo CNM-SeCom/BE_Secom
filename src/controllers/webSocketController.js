@@ -99,8 +99,6 @@ function saveMessage(messageData) {
 //load message by chatId
 async function loadMessageByChatId(req, res) {
     const chatId = req.body.chatId;
-    console.log("________________________")
-    console.log(chatId)
     const result = await messageM.getMessagesByChatId(chatId);
     console.log("result:", result)
     return res.status(200).json({ success: true, message: "Lấy danh sách tin nhắn thành công", data: result });

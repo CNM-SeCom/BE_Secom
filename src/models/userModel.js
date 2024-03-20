@@ -75,28 +75,61 @@ class UserModel {
     }
     // add friend
     async addFriend(request) {
+        //xóa yêu cầu kết bạn và thêm vào danh sách bạn bè
         try {
-            
-    
-            // Cập nhật danh sách yêu cầu trong cơ sở dữ liệu
+            const currentRequests = await this.getCurrentRequests(request.toUser);
+            const currentFriends = await this.getCurrentFriends(request.toUser);
+            const friend = await this.findUserById(request.fromUser);
+            const friendData={
+                idUser: friend.idUser,
+                name: friend.name,
+                avatar: friend.avatar
+            }
+            const newFriends = currentFriends.concat(friendData);
+            const newRequests = currentRequests.filter(req => req.id !== request.id);
             const params = {
+                TableName: this.tableName,
+                Key: {
+                    idUser: request.toUser
+                },
+                UpdateExpression: "SET listFriend = :newFriends, listRequest = :newRequests",
+                ExpressionAttributeValues: {
+                    ":newFriends": newFriends,
+                    ":newRequests": newRequests
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            //update đối với user còn lại
+            const currentRequests2 = await this.getCurrentRequests(request.fromUser);
+            const currentFriends2 = await this.getCurrentFriends(request.fromUser);
+            const friend2 = await this.findUserById(request.toUser);
+            const friendData2={
+                idUser: friend2.idUser,
+                name: friend2.name,
+                avatar: friend2.avatar
+            }
+            const newFriends2 = currentFriends2.concat(friendData2);
+            const newRequests2 = currentRequests2.filter(req => req.id !== request.id);
+            const params2 = {
                 TableName: this.tableName,
                 Key: {
                     idUser: request.fromUser
                 },
-                UpdateExpression: "SET listRequest = :currentRequests",
+                UpdateExpression: "SET listFriend = :newFriends, listRequest = :newRequests",
                 ExpressionAttributeValues: {
-                    ":currentRequests": currentRequests
+                    ":newFriends": newFriends2,
+                    ":newRequests": newRequests2
                 },
                 ReturnValues: "UPDATED_NEW"
             };
-            
             const result = await this.dynamodb.update(params).promise();
+            const result2 = await this.dynamodb.update(params2).promise();
             return result.Attributes;
         } catch (error) {
             console.error('Error adding friend:', error);
             return null;
         }
+
     }
     //send request add friend
     async sendRequestAddFriend(request) {
@@ -210,7 +243,21 @@ class UserModel {
             return null;
         }
     }
-    
+    async getRequestAddFriendByUserId(userId) {
+        try {
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    idUser: userId
+                }
+            };
+            const data = await this.dynamodb.get(params).promise();
+            return data.Item && data.Item.listRequest ? data.Item.listRequest : [];
+        } catch (error) {
+            console.error('Error getting current requests:', error);
+            return [];
+        }
+    }
     
 }
 

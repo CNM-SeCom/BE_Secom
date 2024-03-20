@@ -18,12 +18,6 @@ router.post('/send-message-to-group/:groupId', (req, res) => {
     const result = webSocketController.sendMessageToGroup(groupId, message);
     res.status(result.success ? 200 : 404).json(result);
 });
-// Endpoint API để lấy tin nhắn theo chatId
-router.get('/load-message-by-chatId', async (req, res) => {
-    const chatId = req.body.chatId;
 
-    const result = await webSocketController.loadMessageByChatId(chatId);
-    res.status(200).json(result);
-});
 
 module.exports = router;

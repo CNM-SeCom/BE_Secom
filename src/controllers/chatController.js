@@ -42,8 +42,6 @@ async function createChat(req, res) {
 //get chat by user id
 async function getChatByUserId(req, res) {
     const userId = req.body.idUser;
-    console.log("________________________")
-    console.log(userId)
     const user = await userM.findUserById(userId);
 
     if (user) {
