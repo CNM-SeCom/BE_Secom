@@ -41,14 +41,13 @@ const login = async (req, res) => {
 
     const account = await accountModel.findAccountByPhone(phone);
     if (account) {
-      console.log(account[0].pass)
       const result = await comparePassword(pass, account[0].pass);
       if (result) {
         const userId = account[0].idUser;
         const userData = await userModel.findUserById(userId);
-        // if(userData.Item.refreshToken) {
-        //   return res.status(401).json({ success: false, message: "Tài khoản đang đăng nhập ở nơi khác" });
-        // }
+        if(userData.refreshToken != ""){
+          return res.status(401).json({ success: false, message: "Tài khoản đang đăng nhập ở nơi khác" });
+        }
         console.log(userData)
         const tokens = generateTokens(userData)
         updateRefreshToken(userData.idUser, tokens.refreshToken)
@@ -189,14 +188,13 @@ const updateAccessToken = async (req, res) => {
 
   try {
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
-
     const tokens = generateTokens(user)
     updateRefreshToken(user.Item.idUser, tokens.refreshToken)
 
-    res.json(tokens)
+    return res.status(200).json(tokens)
   } catch (error) {
     console.log(error)
-    res.sendStatus(403)
+    return res.sendStatus(403)
   }
 }
 const logout = async (req, res) => {
@@ -218,5 +216,6 @@ module.exports = {
   login,
   createAccount,
   updateAccessToken,
+  updateRefreshToken,
   logout
 }

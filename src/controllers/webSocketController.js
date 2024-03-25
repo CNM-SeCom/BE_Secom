@@ -7,6 +7,7 @@ const chat_table = process.env.CHAT_TABLE;
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const messageM = new messageModel(message_table, dynamodb);
 const chatM = new chatModel(chat_table, dynamodb);
+const {updateRefreshToken} = require('./authControllers');
 
 
 const clients = new Map();
@@ -36,10 +37,11 @@ function registerGroup(groupId, userId) {
     groups.set(groupId, groupMembers);
 }
 
-function handleDisconnection(userId) {
+async function handleDisconnection(userId) {
     
     clients.delete(userId);
     console.log("delete user:::", userId)
+    await updateRefreshToken(userId, "")
     groups.forEach((groupMembers, groupId) => {
         if (groupMembers.has(userId)) {
             groupMembers.delete(userId);
