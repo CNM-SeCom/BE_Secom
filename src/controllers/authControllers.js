@@ -211,11 +211,27 @@ const logout = async (req, res) => {
 
   res.status(200).json({ success: true, message: "logout success" });
 }
+const changePassword = async (req, res) => {
+  const { phone, newPass } = req.body;
+  const account = await accountModel.findAccountByPhone(phone);
+  if (account) {
+    const result = await accountModel.changePassword(phone, await hashPassword(newPass));
+    if (result) {
+      return res.status(200).json({ success: true, message: "Change password success" });
+    } else {
+      return res.status(500).json({ success: false, message: "Change password failed" });
+    }
+  } else {
+    return res.status(404).json({ success: false, message: "Account not found" });
+  }
+  
+}
 
 module.exports = {
   login,
   createAccount,
   updateAccessToken,
   updateRefreshToken,
+  changePassword,
   logout
 }

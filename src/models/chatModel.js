@@ -13,6 +13,7 @@ class ChatModel {
                
             };
             const result = await this.dynamodb.scan(params).promise();
+            result.Items.sort((a, b) => b.id - a.id);
             if(result.Items.length === 0) return 1;
             else{
                 return parseInt(result.Items[result.Items.length].id) + 1;

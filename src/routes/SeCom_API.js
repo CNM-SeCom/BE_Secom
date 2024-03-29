@@ -1,4 +1,4 @@
-const { login, createAccount, updateAccessToken, logout } = require('../controllers/authControllers');
+const { login, createAccount, updateAccessToken, logout, changePassword } = require('../controllers/authControllers');
 const multer = require('multer');
 const express = require('express');
 const router = express.Router();
@@ -12,6 +12,8 @@ const {sendRequestAddFriend, getListUserByName, getRequestAddFriendByUserId,
 acceptRequestAddFriend
 } = require('../controllers/userController')
 const {loadMessageByChatId} = require('../controllers/webSocketController')
+const cors = require('cors')
+const corsOptions = require('../config/cors.config')
 
 
 // Cấu hình lưu trữ tệp với multer
@@ -58,9 +60,11 @@ function checkFileType(file, callback) {
 router.post("/create", upload.single('img'), createAccount);
 
 // Route POST để đăng nhập
-router.post("/login", login);
+router.post("/login", cors(corsOptions), login);
 // update access token
 router.post("/updateAccessToken", updateAccessToken);
+// route đổi mật khẩu
+router.post("/changePassword", changePassword);
 // Route POST để đăng xuất
 router.post("/logout",verifyToken, logout);
 // // Route POST để gửi tin nhắn

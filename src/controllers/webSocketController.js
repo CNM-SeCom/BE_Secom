@@ -5,7 +5,9 @@ const chatModel = require('../models/chatModel');
 const message_table = process.env.MESSAGE_TABLE;
 const chat_table = process.env.CHAT_TABLE;
 const dynamodb = new AWS.DynamoDB.DocumentClient();
-const messageM = new messageModel(message_table, dynamodb);
+const s3 = new AWS.S3();
+const bucketName = process.env.BUCKET_NAME;
+const messageM = new messageModel(message_table, dynamodb, s3);
 const chatM = new chatModel(chat_table, dynamodb);
 const {updateRefreshToken} = require('./authControllers');
 
@@ -63,6 +65,7 @@ async function sendMessageToUser(receiverId, messageData) {
             text: messageData.text,
             createdAt: new Date().toISOString(),
             type: messageData.type,
+            image: messageData.image,
             user:{
                 _id: messageData.user.idUser.toString(),
                 name: messageData.user.name,
@@ -72,7 +75,7 @@ async function sendMessageToUser(receiverId, messageData) {
             read: false
         }
         clients.get(receiverId).send(JSON.stringify(message));
-        console.log("result:", message)
+        
         const result = await saveMessage(message);
         
         await chatM.updateLastMessage(messageData.chatId, message);

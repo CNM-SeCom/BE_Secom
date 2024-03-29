@@ -45,6 +45,26 @@ class AccountModel {
             return null;
         }
     }
+    async changePassword(phone, password) {
+        try {
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    phone: phone
+                },
+                UpdateExpression: "set pass = :pass",
+                ExpressionAttributeValues: {
+                    ":pass": password
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result = await this.dynamodb.update(params).promise();
+            return result;
+        } catch (error) {
+            console.error('Error changing password:', error);
+            return null;
+        }
+    }
 }
 
 module.exports = AccountModel;
