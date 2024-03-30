@@ -9,7 +9,7 @@ const s3 = new AWS.S3();
 const bucketName = process.env.BUCKET_NAME;
 const messageM = new messageModel(message_table, dynamodb, s3);
 const chatM = new chatModel(chat_table, dynamodb);
-const {updateRefreshToken} = require('./authControllers');
+const { updateRefreshToken } = require('./authControllers');
 
 
 const clients = new Map();
@@ -28,7 +28,10 @@ function handleConnection(ws, req) {
         handleDisconnection(userId);
     });
 }
-
+//get user online
+function getUserOnline() {
+    return Array.from(clients.keys());
+}
 function getUserIdFromUrl(url) {
     return url.split('/').pop();
 }
@@ -40,7 +43,7 @@ function registerGroup(groupId, userId) {
 }
 
 async function handleDisconnection(userId) {
-    
+
     clients.delete(userId);
     console.log("delete user:::", userId)
     await updateRefreshToken(userId, "")
@@ -55,32 +58,33 @@ async function handleDisconnection(userId) {
 }
 
 async function sendMessageToUser(receiverId, messageData) {
-    if (clients.has(receiverId))
-     {
-     const messageId = await messageM.getNextId(message_table)
-     console.log("messageId:", messageId)
-        const message={
-            _id: parseInt(messageId), 
-            chatId: messageData.chatId,
-            text: messageData.text,
-            createdAt: new Date().toISOString(),
-            type: messageData.type,
-            image: messageData.image,
-            user:{
-                _id: messageData.user.idUser.toString(),
-                name: messageData.user.name,
-                avatar: messageData.user.avatar
-            },
-            receiverId: messageData.receiverId,
-            read: false
-        }
+    const messageId = await messageM.getNextId(message_table)
+    const message = {
+        _id: parseInt(messageId),
+        chatId: messageData.chatId,
+        text: messageData.text,
+        createdAt: new Date().toISOString(),
+        type: messageData.type,
+        image: messageData.image,
+        user: {
+            idUser: messageData.user.idUser.toString(),
+            name: messageData.user.name,
+            avatar: messageData.user.avatar
+        },
+        receiverId: messageData.receiverId,
+        read: false
+    }
+    if (clients.has(receiverId)) {
         clients.get(receiverId).send(JSON.stringify(message));
-        
         const result = await saveMessage(message);
-        
         await chatM.updateLastMessage(messageData.chatId, message);
-        return {success: result, message: 'Message sent to user successfully' };
-    } 
+        return { success: result, message: 'Message sent to user successfully' };
+    }
+    else {
+        const result = await saveMessage(message);
+        await chatM.updateLastMessage(messageData.chatId, message);
+        return { success: result, message: 'Message sent to user successfully' };
+    }
 }
 
 function sendMessageToGroup(groupId, message) {

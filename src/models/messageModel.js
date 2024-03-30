@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 
+
 class MessageModel {
     constructor(tableName, dynamodb, s3) {
         this.tableName = tableName;

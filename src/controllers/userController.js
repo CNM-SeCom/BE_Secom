@@ -70,10 +70,11 @@ async function getRequestAddFriendByUserId(req, res) {
     return res.status(200).json({ success: true, message: "Lấy danh sách yêu cầu kết bạn thành công", data: data });
 }
 
+
 module.exports = {
     sendRequestAddFriend,
     getListUserByName,
     acceptRequestAddFriend,
-    getRequestAddFriendByUserId
+    getRequestAddFriendByUserId,
 
 }

@@ -258,7 +258,46 @@ class UserModel {
             return [];
         }
     }
-    
+    async changeAvatar(idUser, avatar) {
+        try {
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    idUser: idUser
+                },
+                UpdateExpression: "set avatar = :avatar",
+                ExpressionAttributeValues: {
+                    ":avatar": avatar
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result = await this.dynamodb.update(params).promise();
+            return result.Attributes;
+        } catch (error) {
+            console.error('Error changing avatar:', error);
+            return null;
+        }
+    }
+    async changeCoverImage(idUser, coverImage) {
+        try {
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    idUser: idUser
+                },
+                UpdateExpression: "set coverImage = :coverImage",
+                ExpressionAttributeValues: {
+                    ":coverImage": coverImage
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result = await this.dynamodb.update(params).promise();
+            return result.Attributes;
+        } catch (error) {
+            console.error('Error changing cover image:', error);
+            return null;
+        }
+    }
 }
 
 module.exports = UserModel;
