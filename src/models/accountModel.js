@@ -29,6 +29,22 @@ class AccountModel {
         }
     }
 
+    async findAccountByEmail(email) {
+        try {
+            const params = {
+                TableName: this.tableName,
+                FilterExpression: "email = :email",
+                ExpressionAttributeValues: {
+                    ":email": email
+                }
+            };
+            const result = await this.dynamodb.scan(params).promise();
+            return result.Items[0];
+        } catch (error) {
+            console.error('Error finding account by email:', error);
+            return null;
+        }
+    }
     async findAccountByPhone(phone) {
         try {
             const params = {
@@ -39,18 +55,18 @@ class AccountModel {
                 }
             };
             const result = await this.dynamodb.scan(params).promise();
-            return result.Items;
+            return result.Items[0];
         } catch (error) {
             console.error('Error finding account by phone:', error);
             return null;
         }
     }
-    async changePassword(phone, password) {
+    async changePassword(id, password) {
         try {
             const params = {
                 TableName: this.tableName,
                 Key: {
-                    phone: phone
+                    id: id
                 },
                 UpdateExpression: "set pass = :pass",
                 ExpressionAttributeValues: {

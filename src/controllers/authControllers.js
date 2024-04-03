@@ -38,42 +38,39 @@ async function comparePassword(plaintextPassword, hash) {
 const login = async (req, res) => {
   try {
     const { phone, pass } = req.body;
+    console.log(phone, pass)
 
     const account = await accountModel.findAccountByPhone(phone);
     if (account) {
-      const result = await comparePassword(pass, account[0].pass);
+      const result = await comparePassword(pass, account.pass);
       if (result) {
-        const userId = account[0].idUser;
+        const userId = account.idUser;
         const userData = await userModel.findUserById(userId);
-        if(userData.refreshToken != ""){
-          return res.status(401).json({ success: false, message: "Tài khoản đang đăng nhập ở nơi khác" });
-        }
-        console.log(userData)
+        // if(userData.refreshToken != ""){
+        //   return res.status(401).json({ success: false, message: "Tài khoản đang đăng nhập ở nơi khác" });
+        // }
         const tokens = generateTokens(userData)
         updateRefreshToken(userData.idUser, tokens.refreshToken)
-        console.log(tokens.accessToken, tokens.refreshToken)
         return res.status(200).json({ success: true, message: "Đăng nhập thành công", token: tokens, user: userData });
       } else {
-        console.log("Login failed: incorrect password");
         return res.status(401).json({ success: false, message: "Mật khẩu không đúng" });
       }
     } else {
-      console.log("Account not found");
       return res.status(404).json({ success: false, message: "Không tìm thấy tài khoản" });
     }
   } catch (error) {
-    console.log("Error", error);
-    return res.status(500).json({ success: false, message: "Iteration failed", error: error });
+    return res.status(500).json({ success: false, message: "failed", error: error });
   }
 }
 
 const createAccount = async (req, res) => {
   try {
-    const { phone, pass, name, gender } = req.body;
+    const { phone, pass, name, gender, dob, email } = req.body;
     console.log(phone, pass, name, gender)
     const accountData = {
       id: Date.now().toString(),
       phone: phone,
+      email: email,
       pass: await hashPassword(pass),
       createdAt: new Date().toString(),
       status: 'active',
@@ -82,9 +79,9 @@ const createAccount = async (req, res) => {
     const userData = {
       idUser: accountData.idUser,
       phone: phone,
-      email: 'Chưa cập nhật',
+      email: email,
+      dob: dob,
       name: name,
-      address: 'Chưa cập nhật',
       gender: gender,
       avatar: gender == '0' ? 'https://res.cloudinary.com/dkwb3ddwa/image/upload/v1710070408/avataDefaultSeCom/amafsgal21le2xhy4jgy.jpg' : 'https://res.cloudinary.com/dkwb3ddwa/image/upload/v1710070408/avataDefaultSeCom/jfvpv2c7etp65u8ssaff.jpg',
       refreshToken: '',
@@ -215,7 +212,7 @@ const changePassword = async (req, res) => {
   const { phone, newPass } = req.body;
   const account = await accountModel.findAccountByPhone(phone);
   if (account) {
-    const result = await accountModel.changePassword(phone, await hashPassword(newPass));
+    const result = await accountModel.changePassword(account.id, await hashPassword(newPass));
     if (result) {
       return res.status(200).json({ success: true, message: "Change password success" });
     } else {
@@ -225,6 +222,57 @@ const changePassword = async (req, res) => {
     return res.status(404).json({ success: false, message: "Account not found" });
   }
   
+  
+}
+const findEmailByPhone = async (req, res) => {
+  const phone = req.body.phone;
+  const account = await accountModel.findAccountByPhone(phone);
+  if (account) {
+    return res.status(200).json({ success: true, message: "Find email success", data: account.email });
+  } else {
+    return res.status(404).json({ success: false, message: "Account not found" });
+  }
+
+}
+const checkRefreshTokenExpiration = (refreshToken) => {
+  try {
+      // Decode the refresh token to access its payload
+      const decoded = jwt.decode(refreshToken);
+
+      // Check if the decoded token is expired
+      if (decoded.exp <= Date.now() / 1000) {
+          // Token is expired
+          return false;
+      }
+
+      // Token is valid and not expired
+      return true;
+  } catch (error) {
+      // An error occurred, likely due to invalid token format
+      console.error("Error checking refresh token expiration:", error);
+      return false;
+  }
+};
+const checkLoginWithToken= async(req, res)=> {
+  const refreshToken = req.body.refreshToken
+  const idUser = req.body.idUser
+  if (!refreshToken) return res.sendStatus(401)
+  try{
+    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
+  const getUserParams = {
+    TableName: userTable,
+    Key: {
+      idUser: idUser
+    }
+  };
+  const user = await dynamodb.get(getUserParams).promise();
+  if (!user || user.Item.refreshToken != refreshToken) return res.status(500).json({ "Failed": "Refresh token not found" });
+  if(!checkRefreshTokenExpiration(refreshToken)) return res.status(403).json({ "Failed": "Refresh token is expired" });
+    return res.status(200).json({ success: true, message: "Login success", data: user.Item });
+  } catch (error) {
+    console.log(error)
+    return res.sendStatus(403)
+  }
 }
 
 module.exports = {
@@ -233,5 +281,7 @@ module.exports = {
   updateAccessToken,
   updateRefreshToken,
   changePassword,
+  findEmailByPhone,
+  checkLoginWithToken,
   logout
 }

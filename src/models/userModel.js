@@ -298,6 +298,35 @@ class UserModel {
             return null;
         }
     }
+    async changeProfile(idUser, name){
+        try {
+            const user = await this.findUserById(idUser);
+            if(!user) return null;
+            else{
+                if(name === "") name = user.name;
+                // if(dob === "") dob = user.dob;
+            }
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    idUser: idUser
+                },
+                UpdateExpression: "set name = :name",
+                ExpressionAttributeValues: {
+                    ":name": name,
+                    // ":dob": dob,
+                    // ":address": address
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result = await this.dynamodb.update(params).promise();
+            return result.Attributes;
+        } catch (error) {
+            console.error('Error changing profile:', error);
+            return null;
+        }
+    }
+    
 }
 
 module.exports = UserModel;

@@ -46,7 +46,7 @@ async function handleDisconnection(userId) {
 
     clients.delete(userId);
     console.log("delete user:::", userId)
-    await updateRefreshToken(userId, "")
+    // await updateRefreshToken(userId, "")
     groups.forEach((groupMembers, groupId) => {
         if (groupMembers.has(userId)) {
             groupMembers.delete(userId);
