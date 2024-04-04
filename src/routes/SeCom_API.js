@@ -66,5 +66,7 @@ router.post('/uploadAvatar', upload.single('image'), uploadAvatar);
 router.post('/uploadCoverImage', upload.single('image'), uploadCoverImage);
 // upload image message
 router.post('/uploadImageMessage', upload.single('image'), uploadImageMessage);
+//change profile
+router.post('/')
 
 module.exports = router;

@@ -38,16 +38,21 @@ async function comparePassword(plaintextPassword, hash) {
 const login = async (req, res) => {
   try {
     const { phone, pass } = req.body;
-    console.log(phone, pass)
-
     const account = await accountModel.findAccountByPhone(phone);
     if (account) {
+
       const result = await comparePassword(pass, account.pass);
       if (result) {
         const userId = account.idUser;
         const userData = await userModel.findUserById(userId);
         // if(userData.refreshToken != ""){
-        //   return res.status(401).json({ success: false, message: "Tài khoản đang đăng nhập ở nơi khác" });
+        //   const checkRefreshToken = checkRefreshTokenExpiration(userData.refreshToken);
+        //   if(!checkRefreshToken){
+        //     return res.status(403).json({ success: false, message: "Refresh token is expired" });
+        //   }
+        //   else{
+
+        //   }
         // }
         const tokens = generateTokens(userData)
         updateRefreshToken(userData.idUser, tokens.refreshToken)
@@ -181,7 +186,7 @@ const updateAccessToken = async (req, res) => {
   };
 
   const user = await dynamodb.get(getUserParams).promise();
-  if (!user || user.Item.refreshToken != refreshToken) return res.status(500).json({ "Failed": "Refresh token not found" });
+  if (!user) return res.status(500).json({ "Failed": "User  not found" });
 
   try {
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
@@ -209,15 +214,22 @@ const logout = async (req, res) => {
   res.status(200).json({ success: true, message: "logout success" });
 }
 const changePassword = async (req, res) => {
-  const { phone, newPass } = req.body;
+  const { phone, newPass, oldPass } = req.body;
   const account = await accountModel.findAccountByPhone(phone);
+
   if (account) {
+    const resultPass = await comparePassword(oldPass, account.pass);
+    if (!resultPass) {
+      return res.status(401).json({ success: false, message: "Old password is incorrect" });
+    }
+    else{
     const result = await accountModel.changePassword(account.id, await hashPassword(newPass));
     if (result) {
       return res.status(200).json({ success: true, message: "Change password success" });
     } else {
       return res.status(500).json({ success: false, message: "Change password failed" });
     }
+  }
   } else {
     return res.status(404).json({ success: false, message: "Account not found" });
   }
@@ -266,7 +278,7 @@ const checkLoginWithToken= async(req, res)=> {
     }
   };
   const user = await dynamodb.get(getUserParams).promise();
-  if (!user || user.Item.refreshToken != refreshToken) return res.status(500).json({ "Failed": "Refresh token not found" });
+  if (!user) return res.status(500).json({ "Failed": "User not found" });
   if(!checkRefreshTokenExpiration(refreshToken)) return res.status(403).json({ "Failed": "Refresh token is expired" });
     return res.status(200).json({ success: true, message: "Login success", data: user.Item });
   } catch (error) {

@@ -46,8 +46,6 @@ const sendOTP = (email, otp) => {
 
 // Xác thực mã OTP
 const verifyOTP = async (otp, secret) => {
-  console.log("secret: "+ secret)
-  console.log("otp: "+ otp)
  const verify = await speakeasy.totp.verify({
     secret: secret,
     token: otp,
