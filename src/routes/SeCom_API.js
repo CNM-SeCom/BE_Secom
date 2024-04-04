@@ -1,5 +1,5 @@
 const { login, createAccount, updateAccessToken, logout, changePassword, findEmailByPhone,
-checkLoginWithToken
+checkLoginWithToken, forgotPassword
 } = require('../controllers/authControllers');
 const express = require('express');
 const router = express.Router();
@@ -34,6 +34,8 @@ router.post("/login", cors(corsOptions), login);
 router.post("/updateAccessToken", updateAccessToken);
 // route đổi mật khẩu
 router.post("/changePassword", changePassword);
+// router quên mật khẩu
+router.post("/forgotPassword", forgotPassword);
 // Route POST để đăng xuất
 router.post("/logout",verifyToken, logout);
 // // Route POST để gửi tin nhắn

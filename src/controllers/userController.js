@@ -70,7 +70,7 @@ async function getRequestAddFriendByUserId(req, res) {
     return res.status(200).json({ success: true, message: "Lấy danh sách yêu cầu kết bạn thành công", data: data });
 }
 async function changeProfile (req, res) {
-    const {idUser, name} = req.body;
+    const {idUser, name, } = req.body;
     const result = await userM.changeProfile(idUser, name);
     if (!result) {
         return res.status(500).json({ success: false, message: "Thay đổi thông tin thất bại" });

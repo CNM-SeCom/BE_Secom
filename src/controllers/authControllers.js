@@ -6,7 +6,7 @@ const account = require('../models/accountModel');
 const user = require('../models/userModel');
 
 
-process.env.AWS_SDk_JS_SUPPRESS_MAITENANCE_MODE_MESSAGE = '1';
+// process.env.AWS_SDk_JS_SUPPRESS_MAITENANCE_MODE_MESSAGE = '1';
 
 AWS.config.update({
   accessKeyId: process.env.ACCESS_KEY,
@@ -36,11 +36,13 @@ async function comparePassword(plaintextPassword, hash) {
 }
 //login
 const login = async (req, res) => {
+
   try {
     const { phone, pass } = req.body;
+    console.log(pass)
+    console.log(await hashPassword(pass));
     const account = await accountModel.findAccountByPhone(phone);
     if (account) {
-
       const result = await comparePassword(pass, account.pass);
       if (result) {
         const userId = account.idUser;
@@ -71,7 +73,6 @@ const login = async (req, res) => {
 const createAccount = async (req, res) => {
   try {
     const { phone, pass, name, gender, dob, email } = req.body;
-    console.log(phone, pass, name, gender)
     const accountData = {
       id: Date.now().toString(),
       phone: phone,
@@ -118,7 +119,7 @@ const generateTokens = payload => {
     { idUser, name },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: '10m'
+      expiresIn: '1d'
     }
 
   )
@@ -127,7 +128,7 @@ const generateTokens = payload => {
     { idUser, name },
     process.env.REFRESH_TOKEN_SECRET,
     {
-      expiresIn: '1d'
+      expiresIn: '30d'
     }
   )
 
@@ -233,8 +234,21 @@ const changePassword = async (req, res) => {
   } else {
     return res.status(404).json({ success: false, message: "Account not found" });
   }
-  
-  
+}
+const forgotPassword = async (req, res) => {
+  const { phone, newPass } = req.body;
+  const account = await accountModel.findAccountByPhone(phone);
+  if (account) {
+    console.log(account.id)
+    const result = await accountModel.changePassword(account.id, await hashPassword(newPass));
+    if (result) {
+      return res.status(200).json({ success: true, message: "Change password success" });
+    } else {
+      return res.status(500).json({ success: false, message: "Change password failed" });
+    }
+  } else {
+    return res.status(404).json({ success: false, message: "Account not found" });
+  }
 }
 const findEmailByPhone = async (req, res) => {
   const phone = req.body.phone;
@@ -295,5 +309,6 @@ module.exports = {
   changePassword,
   findEmailByPhone,
   checkLoginWithToken,
+  forgotPassword,
   logout
 }

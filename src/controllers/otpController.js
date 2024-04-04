@@ -1,5 +1,11 @@
 const nodemailer = require('nodemailer');
 const speakeasy = require('speakeasy');
+require('dotenv').config();
+const AWS = require('aws-sdk');
+const dynamodb = new AWS.DynamoDB.DocumentClient();
+const userModel = require('../models/userModel');
+const user_table = process.env.USER_TABLE;
+const userM = new userModel(user_table, dynamodb);
 
 
 // Khai báo thông tin của mail server để gửi email
@@ -22,6 +28,7 @@ const generateOTP = () => {
       otp: speakeasy.totp({
         secret: secret.base32,
         encoding: 'base32',
+        step: 90,
       }),
     };
   };
@@ -51,14 +58,17 @@ const verifyOTP = async (otp, secret) => {
     token: otp,
     encoding: 'base32',
     window: 1,
+    step: 90,
   });
-  console.log(verify)
   return verify;
 };
 
 // Endpoint để tạo và gửi OTP
 const OTP = async (req, res) => {
     const email = req.body.email;
+    if(await userM.checkExistEmail(email) === false){
+      return res.status(400).json({ success: false, message: 'Không tìm thấy tài khoản khớp với email này' });
+    }
     const otpInfo = generateOTP();
     otpData[email] = {
       secret: otpInfo.secret,

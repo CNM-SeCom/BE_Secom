@@ -326,6 +326,22 @@ class UserModel {
             return null;
         }
     }
+    async checkExistEmail(email) {
+        try {
+            const params = {
+                TableName: this.tableName,
+                FilterExpression: "email = :email",
+                ExpressionAttributeValues: {
+                    ":email": email
+                }
+            };
+            const result = await this.dynamodb.scan(params).promise();
+            return result.Items.length > 0;
+        } catch (error) {
+            console.error('Error checking email:', error);
+            return false;
+        }
+    }
     
 }
 
