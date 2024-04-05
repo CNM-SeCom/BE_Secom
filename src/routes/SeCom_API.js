@@ -1,5 +1,5 @@
 const { login, createAccount, updateAccessToken, logout, changePassword, findEmailByPhone,
-checkLoginWithToken, forgotPassword
+checkLoginWithToken, forgotPassword, checkPhoneExist
 } = require('../controllers/authControllers');
 const express = require('express');
 const router = express.Router();
@@ -13,7 +13,7 @@ const verifyToken = require('../middleware/auth');
 const {createChat, getChatByUserId} = require('../controllers/chatController')
 const {OTP, verify} = require('../controllers/otpController')
 const {sendRequestAddFriend, getListUserByName, getRequestAddFriendByUserId,
-acceptRequestAddFriend, changeAvatar
+acceptRequestAddFriend, changeAvatar, changeProfile
 } = require('../controllers/userController')
 const {loadMessageByChatId} = require('../controllers/webSocketController')
 const {uploadAvatar, uploadCoverImage, uploadImageMessage} = require('../controllers/s3Controller')
@@ -69,6 +69,8 @@ router.post('/uploadCoverImage', upload.single('image'), uploadCoverImage);
 // upload image message
 router.post('/uploadImageMessage', upload.single('image'), uploadImageMessage);
 //change profile
-router.post('/')
+router.post('/changeProfile', changeProfile);
+//checkPhoneExist
+router.post('/checkPhoneExist', checkPhoneExist);
 
 module.exports = router;

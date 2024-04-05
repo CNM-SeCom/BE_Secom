@@ -80,7 +80,7 @@ class UserModel {
             const currentRequests = await this.getCurrentRequests(request.toUser);
             const currentFriends = await this.getCurrentFriends(request.toUser);
             const friend = await this.findUserById(request.fromUser);
-            const friendData={
+            const friendData = {
                 idUser: friend.idUser,
                 name: friend.name,
                 avatar: friend.avatar
@@ -103,7 +103,7 @@ class UserModel {
             const currentRequests2 = await this.getCurrentRequests(request.fromUser);
             const currentFriends2 = await this.getCurrentFriends(request.fromUser);
             const friend2 = await this.findUserById(request.toUser);
-            const friendData2={
+            const friendData2 = {
                 idUser: friend2.idUser,
                 name: friend2.name,
                 avatar: friend2.avatar
@@ -136,10 +136,10 @@ class UserModel {
         try {
             // Lấy danh sách yêu cầu hiện tại từ cơ sở dữ liệu
             const currentRequests = await this.getCurrentRequests(request.fromUser);
-            
+
             // Thêm yêu cầu mới vào danh sách
             currentRequests.push(request);
-    
+
             // Cập nhật danh sách yêu cầu trong cơ sở dữ liệu
             const params = {
                 TableName: this.tableName,
@@ -152,7 +152,7 @@ class UserModel {
                 },
                 ReturnValues: "UPDATED_NEW"
             };
-            
+
             const result = await this.dynamodb.update(params).promise();
             return result.Attributes;
         } catch (error) {
@@ -164,10 +164,10 @@ class UserModel {
         try {
             // Lấy danh sách yêu cầu hiện tại từ cơ sở dữ liệu
             const currentRequests = await this.getCurrentRequests(request.toUser);
-    
+
             // Thêm yêu cầu mới vào danh sách
             currentRequests.push(request);
-    
+
             // Cập nhật danh sách yêu cầu trong cơ sở dữ liệu
             const params = {
                 TableName: this.tableName,
@@ -180,7 +180,7 @@ class UserModel {
                 },
                 ReturnValues: "UPDATED_NEW"
             };
-            
+
             const result = await this.dynamodb.update(params).promise();
             return result.Attributes;
         } catch (error) {
@@ -197,7 +197,7 @@ class UserModel {
                 }
             };
             const data = await this.dynamodb.get(params).promise();
-            
+
             // Trả về danh sách yêu cầu hiện tại, nếu không có trả về một mảng rỗng
             return data.Item && data.Item.listRequest ? data.Item.listRequest : [];
         } catch (error) {
@@ -214,7 +214,7 @@ class UserModel {
                 }
             };
             const data = await this.dynamodb.get(params).promise();
-            
+
             // Trả về danh sách yêu cầu hiện tại, nếu không có trả về một mảng rỗng
             return data.Item && data.Item.listFriend ? data.Item.listFriend : [];
         } catch (error) {
@@ -234,7 +234,7 @@ class UserModel {
                 ExpressionAttributeValues: {
                     ":usernameValue": username
                 },
-                Limit: 20 
+                Limit: 20
             };
             const data = await this.dynamodb.scan(params).promise();
             return data.Items;
@@ -298,12 +298,13 @@ class UserModel {
             return null;
         }
     }
-    async changeProfile(idUser, name){
+    async changeProfile(idUser, name) {
         try {
             const user = await this.findUserById(idUser);
-            if(!user) return null;
-            else{
-                if(name === "") name = user.name;
+            console.log("user:", user)
+            if (!user) return null;
+            else {
+                if (name === "") name = user.name;
                 // if(dob === "") dob = user.dob;
             }
             const params = {
@@ -311,16 +312,16 @@ class UserModel {
                 Key: {
                     idUser: idUser
                 },
-                UpdateExpression: "set name = :name",
-                ExpressionAttributeValues: {
-                    ":name": name,
-                    // ":dob": dob,
-                    // ":address": address
+                UpdateExpression: "set #n = :name",
+                ExpressionAttributeNames: {
+                    "#n": "name"
                 },
-                ReturnValues: "UPDATED_NEW"
+                ExpressionAttributeValues: {
+                    ":name": name
+                }
             };
             const result = await this.dynamodb.update(params).promise();
-            return result.Attributes;
+            return result;
         } catch (error) {
             console.error('Error changing profile:', error);
             return null;
@@ -342,7 +343,7 @@ class UserModel {
             return false;
         }
     }
-    
+
 }
 
 module.exports = UserModel;

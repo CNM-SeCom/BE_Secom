@@ -71,7 +71,9 @@ async function getRequestAddFriendByUserId(req, res) {
 }
 async function changeProfile (req, res) {
     const {idUser, name, } = req.body;
+    console.log(name)
     const result = await userM.changeProfile(idUser, name);
+    console.log("result:", result)
     if (!result) {
         return res.status(500).json({ success: false, message: "Thay đổi thông tin thất bại" });
     }
@@ -84,4 +86,6 @@ module.exports = {
     getListUserByName,
     acceptRequestAddFriend,
     getRequestAddFriendByUserId,
+    changeProfile,
+
 }

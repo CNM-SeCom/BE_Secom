@@ -4,6 +4,7 @@ const AWS = require('aws-sdk');
 const jwt = require('jsonwebtoken');
 const account = require('../models/accountModel');
 const user = require('../models/userModel');
+const e = require('express');
 
 
 // process.env.AWS_SDk_JS_SUPPRESS_MAITENANCE_MODE_MESSAGE = '1';
@@ -90,6 +91,7 @@ const createAccount = async (req, res) => {
       name: name,
       gender: gender,
       avatar: gender == '0' ? 'https://res.cloudinary.com/dkwb3ddwa/image/upload/v1710070408/avataDefaultSeCom/amafsgal21le2xhy4jgy.jpg' : 'https://res.cloudinary.com/dkwb3ddwa/image/upload/v1710070408/avataDefaultSeCom/jfvpv2c7etp65u8ssaff.jpg',
+      coverImage:"https://res.cloudinary.com/dekjrisqs/image/upload/v1712277485/SECOM/f3swqcbkfqzpwe5vqmw5.jpg",
       refreshToken: '',
       listChat: [],
       listFriend: [],
@@ -299,6 +301,15 @@ const checkLoginWithToken= async(req, res)=> {
     console.log(error)
     return res.sendStatus(403)
   }
+ 
+}
+ const checkPhoneExist = async(req, res)=>{
+  const {phone} = req.body;
+  const checkPhone = await dynamodb.scan({ TableName: accountTable, FilterExpression: "phone = :phone", ExpressionAttributeValues: { ":phone": phone } }).promise();
+  if (checkPhone.Items.length > 0) {
+    return res.status(400).json({ success: false, message: "Phone number already exists" });
+  }
+  return res.status(200).json({ success: true, message: "success" });
 }
 
 module.exports = {
@@ -310,5 +321,6 @@ module.exports = {
   findEmailByPhone,
   checkLoginWithToken,
   forgotPassword,
+  checkPhoneExist,
   logout
 }
