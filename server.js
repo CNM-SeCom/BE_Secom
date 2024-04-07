@@ -2,6 +2,7 @@ require('dotenv').config();
 const AWS = require('aws-sdk');
 const express = require('express');
 const ApiRouter = require('./src/routes/SeCom_API');
+const cloudinaryRouter = require('./src/routes/cloudinaryRouter');
 const cors = require('cors')
 const corsOptions = require('./src/config/cors.config')
 
@@ -18,6 +19,7 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ port: 3001 });
 app.use(cors())
 app.use('/', ApiRouter);
+app.use('/cloudinary', cloudinaryRouter);
 app.use('/ws', wsRoutes);
 wss.on('connection', webSocketController.handleConnection);
 app.listen(PORT, () => {

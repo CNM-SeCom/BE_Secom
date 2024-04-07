@@ -128,9 +128,10 @@ class ChatModel {
     // update last message
     async updateLastMessage(chatId, lastMessage) {
         try {
+            
             var lastMessageText = ""
             if (lastMessage.text === "") {
-                lastMessageText = lastMessage.user.name + " đã gửi 1 hình ảnh"
+                lastMessageText = lastMessage.user.name + " đã gửi 1 tệp"
             }
             else {
                 lastMessageText = lastMessage.text
@@ -147,7 +148,7 @@ class ChatModel {
                     ":lastMessageTime": lastMessage.createdAt,
                     ":lastSenderId": lastMessage.user.idUser,
                     ":lastSenderName": lastMessage.user.name,
-                    ":lastMessageRead": lastMessage.read
+                    ":lastMessageRead": lastMessage.readStatus
                 },
                 ReturnValues: "UPDATED_NEW"
             };

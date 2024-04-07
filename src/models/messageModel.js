@@ -73,7 +73,49 @@ class MessageModel {
             return [];
         }
     }
-    
+    async deleteMessageById(messageId) {
+        try {
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    _id: messageId
+                }
+            };
+            await this.dynamodb.delete(params).promise();
+            return true;
+        } catch (error) {
+            console.error('Error deleting message:', error);
+            return false;
+        }
+    }
+    async shareMessageToUser(receiverId, chatId ,messageData) {
+        const messageId = await this.getNextId(this.tableName);
+        const message = {
+            _id: parseInt(messageId),
+            chatId: chatId,
+            text: messageData.text,
+            createdAt: new Date().toISOString(),
+            type: messageData.type,
+            image: messageData.image,
+            video: messageData.video,
+            user: {
+                idUser: messageData.user.idUser.toString(),
+                name: messageData.user.name,
+                avatar: messageData.user.avatar
+            },
+            receiverId: messageData.receiverId,
+            read: false
+        }
+        if (clients.has(receiverId)) {
+            clients.get(receiverId).send(JSON.stringify(message));
+            const result = await this.saveMessage(message);
+            return { success: result, message: 'Message sent to user successfully' };
+        }
+        else {
+            const result = await this.saveMessage(message);
+            return { success: result, message: 'Message sent to user successfully' };
+        }
+    }    
 }
 
 module.exports = MessageModel;

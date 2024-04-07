@@ -62,6 +62,7 @@ async function handleDisconnection(userId) {
 }
 
 async function sendMessageToUser(receiverId, messageData) {
+    console.log(messageData)
     const messageId = await messageM.getNextId(message_table)
     const message = {
         _id: parseInt(messageId),
@@ -69,14 +70,16 @@ async function sendMessageToUser(receiverId, messageData) {
         text: messageData.text,
         createdAt: new Date().toISOString(),
         type: messageData.type,
-        image: messageData.image,
+        image: messageData.image? messageData.image : null,
+        video: messageData.video? messageData.video : null,
+        file: messageData.File? messageData.File : null,
         user: {
             idUser: messageData.user.idUser.toString(),
             name: messageData.user.name,
             avatar: messageData.user.avatar
         },
         receiverId: messageData.receiverId,
-        read: false
+        readStatus: false
     }
     if (clients.has(receiverId)) {
         clients.get(receiverId).send(JSON.stringify(message));
@@ -121,11 +124,10 @@ function sendNotifyAddFriendToUser(req,res) {
         }
 
     }
-
     if (clients.has(receiverId)) {
         clients.get(receiverId).send(JSON.stringify(messageData));
         
-        return res.status(200).json({ success: true, message: 'Message sent to user successfully', data: result});
+        return res.status(200).json({ success: true, message: 'Message sent to user successfully'});
     }
     else {
         return res.status(200).json({ success: false, message: 'User not online' });
