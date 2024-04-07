@@ -355,7 +355,21 @@ class UserModel {
             return false;
         }
     }
-  
+    async getListFriendByUserId(userId) {
+        try {
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    idUser: userId
+                }
+            };
+            const data = await this.dynamodb.get(params).promise();
+            return data.Item && data.Item.listFriend ? data.Item.listFriend : [];
+        } catch (error) {
+            console.error('Error getting list friend:', error);
+            return [];
+        }
+    }
 
 
 }

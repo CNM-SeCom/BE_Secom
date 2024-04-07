@@ -140,6 +140,14 @@ async function reloadUser(req, res) {
         return res.status(500).json({ success: false, message: "Tải lại thông tin người dùng thất bại" });
     }
     return res.status(200).json({ success: true, message: "Tải lại thông tin người dùng thành công", data: result });
+}
+async function getListFriendByUserId(req, res) {
+    const userId = req.body.idUser;
+    const result = await userM.getListFriendByUserId(userId);
+    if (!result) {
+        return res.status(500).json({ success: false, message: "Lấy danh sách bạn bè thất bại" });
+    }
+    return res.status(200).json({ success: true, message: "Lấy danh sách bạn bè thành công", data: result });
 
 }
 
@@ -152,6 +160,7 @@ module.exports = {
     changeProfile,
     checkExistRequestAddFriend,
     reloadUser,
-    getSentRequestAddFriendByUserId
+    getSentRequestAddFriendByUserId,
+    getListFriendByUserId
 
 }

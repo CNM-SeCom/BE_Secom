@@ -13,10 +13,12 @@ const verifyToken = require('../middleware/auth');
 const {createChat, getChatByUserId} = require('../controllers/chatController')
 const {OTP, verify} = require('../controllers/otpController')
 const {sendRequestAddFriend, getListUserByName, getRequestAddFriendByUserId,
-acceptRequestAddFriend, changeProfile, checkExistRequestAddFriend, reloadUser, getSentRequestAddFriendByUserId
+acceptRequestAddFriend, changeProfile, checkExistRequestAddFriend, reloadUser, getSentRequestAddFriendByUserId,
+getListFriendByUserId
 } = require('../controllers/userController')
 const {loadMessageByChatId, getUserOnline} = require('../controllers/webSocketController')
-const {uploadAvatar, uploadCoverImage, uploadImageMessage} = require('../controllers/s3Controller')
+const {uploadAvatar, uploadCoverImage, uploadImageMessage} = require('../controllers/s3Controller');
+const { get } = require('http');
 
 
 
@@ -81,5 +83,6 @@ router.post('/checkExistRequestAddFriend', checkExistRequestAddFriend);
 router.post('/getOnline', getUserOnline);
 //tải lại user
 router.post('/reloadUser', reloadUser);
+router.post('/getListFriendByUserId', getListFriendByUserId);
 
 module.exports = router;
