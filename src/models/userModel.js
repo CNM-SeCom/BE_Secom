@@ -77,6 +77,7 @@ class UserModel {
     async addFriend(request) {
         //xóa yêu cầu kết bạn và thêm vào danh sách bạn bè
         try {
+            console.log(request.fromUser, request.toUser)
             const currentRequests = await this.getCurrentRequests(request.toUser);
             const currentFriends = await this.getCurrentFriends(request.toUser);
             const friend = await this.findUserById(request.fromUser);
@@ -197,7 +198,7 @@ class UserModel {
                 }
             };
             const data = await this.dynamodb.get(params).promise();
-
+            console.log(data)
             // Trả về danh sách yêu cầu hiện tại, nếu không có trả về một mảng rỗng
             return data.Item && data.Item.listRequest ? data.Item.listRequest : [];
         } catch (error) {
@@ -343,6 +344,19 @@ class UserModel {
             return false;
         }
     }
+    async checkExistRequestAddFriend(request) {
+        try {
+            const currentRequests = await this.getCurrentRequests(request.toUser);
+            console.log(currentRequests)
+            const result = currentRequests.find(req => req.fromUser === request.fromUser);
+            return result ? true : false;
+        } catch (error) {
+            console.error('Error checking request add friend:', error);
+            return false;
+        }
+    }
+  
+
 
 }
 

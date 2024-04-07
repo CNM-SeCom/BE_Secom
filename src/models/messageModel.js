@@ -15,15 +15,14 @@ class MessageModel {
                
             };
             const result = await this.dynamodb.scan(params).promise();
-            console.log("result.Items:", result)
-            // sắp xếp result tăng dần theo _id
-            result.Items.sort((a, b) => b._id - a._id);
-            console.log("result.Items[result.Items.length]._id:", result.Items[0]._id)
             if(result.Items.length === 0) return 1;
             else{
-                console.log("result.Items[result.Items.length]._id:", result.Items[0]._id)
+            // sắp xếp result tăng dần theo _id
+            result.Items.sort((a, b) => b._id - a._id);
+            
                 return parseInt(result.Items[0]._id) + 1;
             }
+        
         } catch (error) {
             console.error('Error retrieving messages:', error);
             return 1;

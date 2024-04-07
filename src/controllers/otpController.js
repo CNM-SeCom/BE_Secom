@@ -66,9 +66,9 @@ const verifyOTP = async (otp, secret) => {
 // Endpoint để tạo và gửi OTP
 const OTP = async (req, res) => {
     const email = req.body.email;
-    if(await userM.checkExistEmail(email) === false){
-      return res.status(400).json({ success: false, message: 'Không tìm thấy tài khoản khớp với email này' });
-    }
+    // if(await userM.checkExistEmail(email) === false){
+    //   return res.status(400).json({ success: false, message: 'Không tìm thấy tài khoản khớp với email này' });
+    // }
     const otpInfo = generateOTP();
     otpData[email] = {
       secret: otpInfo.secret,

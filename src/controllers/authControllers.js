@@ -4,7 +4,7 @@ const AWS = require('aws-sdk');
 const jwt = require('jsonwebtoken');
 const account = require('../models/accountModel');
 const user = require('../models/userModel');
-const e = require('express');
+// const e = require('express');
 
 
 // process.env.AWS_SDk_JS_SUPPRESS_MAITENANCE_MODE_MESSAGE = '1';
@@ -254,6 +254,7 @@ const forgotPassword = async (req, res) => {
 }
 const findEmailByPhone = async (req, res) => {
   const phone = req.body.phone;
+  console.log(phone)
   const account = await accountModel.findAccountByPhone(phone);
   if (account) {
     return res.status(200).json({ success: true, message: "Find email success", data: account.email });
@@ -304,11 +305,19 @@ const checkLoginWithToken= async(req, res)=> {
  
 }
  const checkPhoneExist = async(req, res)=>{
-  const {phone} = req.body;
+  const phone = req.body.phone;
+  console.log(phone)
   const checkPhone = await dynamodb.scan({ TableName: accountTable, FilterExpression: "phone = :phone", ExpressionAttributeValues: { ":phone": phone } }).promise();
   if (checkPhone.Items.length > 0) {
     return res.status(400).json({ success: false, message: "Phone number already exists" });
   }
+  return res.status(200).json({ success: true, message: "success" });
+}
+const checkEmailExist = async(req, res)=>{
+  const email = req.body.email;
+ if(await userModel.checkExistEmail(email) === false){
+      return res.status(400).json({ success: false, message: 'Không tìm thấy tài khoản khớp với email này' });
+    }
   return res.status(200).json({ success: true, message: "success" });
 }
 
@@ -322,5 +331,6 @@ module.exports = {
   checkLoginWithToken,
   forgotPassword,
   checkPhoneExist,
+  checkEmailExist,
   logout
 }

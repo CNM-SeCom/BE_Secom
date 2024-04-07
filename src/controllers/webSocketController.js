@@ -9,7 +9,9 @@ const s3 = new AWS.S3();
 const bucketName = process.env.BUCKET_NAME;
 const messageM = new messageModel(message_table, dynamodb, s3);
 const chatM = new chatModel(chat_table, dynamodb);
-const { updateRefreshToken } = require('./authControllers');
+const user_table = process.env.USER_TABLE;
+const userModel = require('../models/userModel');
+const userM = new userModel(user_table, dynamodb);
 
 
 const clients = new Map();
@@ -19,9 +21,11 @@ function handleConnection(ws, req) {
     const userId = getUserIdFromUrl(req.url).split('=')[1];
     clients.set(userId, ws);
     // clients.get(userId).send('Connected to server:'+userId);
+
     console.log("connected user:", userId)
 
     ws.on('message', function incoming(message) {
+
     });
 
     ws.on('close', function close() {
@@ -29,8 +33,8 @@ function handleConnection(ws, req) {
     });
 }
 //get user online
-function getUserOnline() {
-    return Array.from(clients.keys());
+function getUserOnline(req, res) {
+    return res.status(200).json({ success: true, message: "Lấy danh sách người dùng online thành công", data: Array.from(clients.keys()) });
 }
 function getUserIdFromUrl(url) {
     return url.split('/').pop();
@@ -86,6 +90,48 @@ async function sendMessageToUser(receiverId, messageData) {
         return { success: result, message: 'Message sent to user successfully' };
     }
 }
+function sendNotifyAddFriendToUser(req,res) {
+    const receiverId = req.body.receiverId;
+    const from = req.body.name;
+    const messageData = {
+        type: "ADD_FRIEND",
+        text: from + " đã gửi lời mời kết bạn", 
+        user:{
+            name: from
+        }
+    }
+
+    if (clients.has(receiverId)) {
+        clients.get(receiverId).send(JSON.stringify(messageData));
+        return res.status(200).json({ success: true, message: 'Message sent to user successfully' });
+    }
+    else {
+        return res.status(200).json({ success: false, message: 'User not online' });
+    }
+
+}
+ function sendNotifyAcceptFriendToUser (req,res) {
+    const receiverId = req.body.receiverId;
+    const from = req.body.name;
+    const messageData = {
+        type: "ACCEPT_FRIEND",
+        text: from + " đã chấp nhận lời mời kết bạn", 
+        user:{
+            name: from
+        }
+
+    }
+
+    if (clients.has(receiverId)) {
+        clients.get(receiverId).send(JSON.stringify(messageData));
+        
+        return res.status(200).json({ success: true, message: 'Message sent to user successfully', data: result});
+    }
+    else {
+        return res.status(200).json({ success: false, message: 'User not online' });
+    }
+
+}
 
 function sendMessageToGroup(groupId, message) {
     const groupMembers = groups.get(groupId);
@@ -117,5 +163,8 @@ module.exports = {
     handleConnection,
     sendMessageToUser,
     sendMessageToGroup,
-    loadMessageByChatId
+    loadMessageByChatId,
+    getUserOnline,
+    sendNotifyAddFriendToUser,
+    sendNotifyAcceptFriendToUser
 };

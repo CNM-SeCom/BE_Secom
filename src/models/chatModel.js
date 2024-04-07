@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 const UserModel = require('./userModel');
+require('dotenv').config();
 AWS.config.update({
     accessKeyId: process.env.ACCESS_KEY,
     secretAccessKey: process.env.SECRET_KEY,
@@ -8,9 +9,7 @@ AWS.config.update({
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const user_table = process.env.USER_TABLE;
-
 const userM = new UserModel(user_table, dynamodb);
-
 
 class ChatModel {
 
@@ -25,11 +24,11 @@ class ChatModel {
 
             };
             const result = await this.dynamodb.scan(params).promise();
-            result.Items.sort((a, b) => b.id - a.id);
-            if (result.Items.length === 0) return 1;
-            else {
-                return parseInt(result.Items[result.Items.length].id) + 1;
-            }
+            if(result.Items.length === 0) return 1;
+            else{
+            result.Items.sort((a, b) => a.id - b.id);
+                return parseInt(result.Items[result.Items.length-1].id) + 1
+        }
         } catch (error) {
             console.error('Error retrieving messages:', error);
             return 1;
@@ -42,6 +41,15 @@ class ChatModel {
                 Item: chatData,
             };
             await this.dynamodb.put(params).promise();
+            console.log("chatData:", chatData.participants.length)
+            for (let i = 0; i < chatData.participants.length; i++) {
+                const user = await userM.findUserById(chatData.participants[i].idUser);
+                if (user) {
+                    
+                    user.listChat.push(chatData.id);
+                    await userM.updateListChatByUserId(user.idUser, user.listChat);
+                }
+            }
             return true;
         } catch (error) {
             console.error('Error saving message:', error);
@@ -78,7 +86,7 @@ class ChatModel {
     }
 
     async getChatByChatId(chatId) {
-        await this.updateNameAndAvatarForParticipants(chatId);
+        // await this.updateNameAndAvatarForParticipants(chatId);
         try {
             const params = {
                 TableName: this.tableName,

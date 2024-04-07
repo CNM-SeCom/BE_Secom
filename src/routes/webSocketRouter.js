@@ -18,6 +18,12 @@ router.post('/send-message-to-group/:groupId', (req, res) => {
     const result = webSocketController.sendMessageToGroup(groupId, message);
     res.status(result.success ? 200 : 404).json(result);
 });
-
-
+router.post('/sendNotifyAddFriendToUser', (req, res) => {
+    const result = webSocketController.sendNotifyAddFriendToUser(req, res);
+    res.status(result.success ? 200 : 404).json(result);
+});
+router.post('/sendNotifyAcceptFriendToUser',async (req, res) => {
+    const result =await webSocketController.sendNotifyAcceptFriendToUser(req, res);
+    res.status(result.success ? 200 : 404).json(result);
+});
 module.exports = router;

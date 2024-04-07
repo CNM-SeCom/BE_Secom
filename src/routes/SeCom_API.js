@@ -1,5 +1,5 @@
 const { login, createAccount, updateAccessToken, logout, changePassword, findEmailByPhone,
-checkLoginWithToken, forgotPassword, checkPhoneExist
+checkLoginWithToken, forgotPassword, checkPhoneExist, checkEmailExist
 } = require('../controllers/authControllers');
 const express = require('express');
 const router = express.Router();
@@ -13,9 +13,9 @@ const verifyToken = require('../middleware/auth');
 const {createChat, getChatByUserId} = require('../controllers/chatController')
 const {OTP, verify} = require('../controllers/otpController')
 const {sendRequestAddFriend, getListUserByName, getRequestAddFriendByUserId,
-acceptRequestAddFriend, changeAvatar, changeProfile
+acceptRequestAddFriend, changeProfile, checkExistRequestAddFriend, reloadUser, getSentRequestAddFriendByUserId
 } = require('../controllers/userController')
-const {loadMessageByChatId} = require('../controllers/webSocketController')
+const {loadMessageByChatId, getUserOnline} = require('../controllers/webSocketController')
 const {uploadAvatar, uploadCoverImage, uploadImageMessage} = require('../controllers/s3Controller')
 
 
@@ -51,15 +51,16 @@ router.post("/createChat", createChat);
 //tìm email từ sđt
 router.post("/findEmailByPhone", findEmailByPhone);
 // router gửi lời mời kết bạn
-router.post("/sendRequestAddFriend",verifyToken, sendRequestAddFriend);
+router.post("/sendRequestAddFriend", sendRequestAddFriend);
 // router lấy danh sách người dùng theo tên
 router.post("/getListUserByName", getListUserByName);
 // lấy danh sách đoạn chat
-router.post("/getChatByUserId",verifyToken, getChatByUserId);
+router.post("/getChatByUserId", getChatByUserId);
 // lấy danh sách tin nhắn theo chat id
 router.post("/getMessageByChatId", loadMessageByChatId);
 //lấy danh sách lời mời kết bạn
 router.post("/getRequestAddFriendByUserId", getRequestAddFriendByUserId);
+router.post("/getSentRequestAddFriendByUserId", getSentRequestAddFriendByUserId);
 //chấp nhận kết bạn
 router.post("/acceptRequestAddFriend", acceptRequestAddFriend);
 //
@@ -72,5 +73,13 @@ router.post('/uploadImageMessage', upload.single('image'), uploadImageMessage);
 router.post('/changeProfile', changeProfile);
 //checkPhoneExist
 router.post('/checkPhoneExist', checkPhoneExist);
+//check emaill tồn tại
+router.post('/checkEmailExist', checkEmailExist);
+//check lời mời kết bạn
+router.post('/checkExistRequestAddFriend', checkExistRequestAddFriend);
+//get online
+router.post('/getOnline', getUserOnline);
+//tải lại user
+router.post('/reloadUser', reloadUser);
 
 module.exports = router;
