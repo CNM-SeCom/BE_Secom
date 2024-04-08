@@ -39,8 +39,9 @@ async function sendRequestAddFriend(req, res) {
 }
 async function getListUserByName(req, res) {
     const name = req.body.name;
+    const idUser = req.body.idUser;
     if (name) {
-        const result = await userM.findUserByUserName(name);
+        const result = await userM.findUserByUserName(name, idUser);
         if (!result) {
             return res.status(500).json({ success: false, message: "Lấy danh sách người dùng thất bại" });
         }
@@ -150,6 +151,22 @@ async function getListFriendByUserId(req, res) {
     return res.status(200).json({ success: true, message: "Lấy danh sách bạn bè thành công", data: result });
 
 }
+async function cancelRequestAddFriend(req, res) {
+    const request = req.body;
+    const result = await userM.cancelRequestAddFriend(request);
+    if (!result) {
+        return res.status(500).json({ success: false, message: "Hủy lời mời kết bạn thất bại" });
+    }
+    return res.status(200).json({ success: true, message: "Hủy lời mời kết bạn thành công" });
+}
+async function unFriend(req, res) {
+    const {idUser, friendId} = req.body;
+    const result = await userM.unFriend(idUser, friendId);
+    if (!result) {
+        return res.status(500).json({ success: false, message: "Hủy kết bạn thất bại" });
+    }
+    return res.status(200).json({ success: true, message: "Hủy kết bạn thành công" });
+}
 
 
 module.exports = {
@@ -161,6 +178,8 @@ module.exports = {
     checkExistRequestAddFriend,
     reloadUser,
     getSentRequestAddFriendByUserId,
-    getListFriendByUserId
+    getListFriendByUserId,
+    cancelRequestAddFriend,
+    unFriend
 
 }

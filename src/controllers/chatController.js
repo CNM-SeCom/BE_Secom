@@ -25,14 +25,7 @@ async function createChat(req, res) {
     }
     const chat = await chatM.saveChat(chatData);
     //update chat id cho user
-    for (let i = 0; i < listParticipant.length; i++) {
-        const user = await userM.findUserById(listParticipant[i].idUser);
-        if (user) {
-            
-            user.listChat.push(chatData.id);
-            await userM.updateListChatByUserId(user.idUser, user.listChat);
-        }
-    }
+    
     if (chat) {
         return res.status(200).json({ success: true, message: "Tạo chat thành công" });
     } else {

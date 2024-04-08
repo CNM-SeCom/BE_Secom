@@ -160,6 +160,14 @@ async function loadMessageByChatId(req, res) {
     console.log("result:", result)
     return res.status(200).json({ success: true, message: "Lấy danh sách tin nhắn thành công", data: result });
 }
+async function deleteMessageById(req, res) {
+    const messageId = req.body.messageId;
+    const result = await messageM.deleteMessageById(messageId);
+    if (!result) {
+        return res.status(500).json({ success: false, message: "Xóa tin nhắn thất bại" });
+    }
+    return res.status(200).json({ success: true, message: "Xóa tin nhắn thành công" });
+}
 
 module.exports = {
     handleConnection,
@@ -168,5 +176,6 @@ module.exports = {
     loadMessageByChatId,
     getUserOnline,
     sendNotifyAddFriendToUser,
-    sendNotifyAcceptFriendToUser
+    sendNotifyAcceptFriendToUser,
+    deleteMessageById
 };

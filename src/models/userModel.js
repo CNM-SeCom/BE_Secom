@@ -77,7 +77,6 @@ class UserModel {
     async addFriend(request) {
         //xóa yêu cầu kết bạn và thêm vào danh sách bạn bè
         try {
-            console.log(request.fromUser, request.toUser)
             const currentRequests = await this.getCurrentRequests(request.toUser);
             const currentFriends = await this.getCurrentFriends(request.toUser);
             const friend = await this.findUserById(request.fromUser);
@@ -224,7 +223,7 @@ class UserModel {
         }
     }
     //get user by user name
-    async findUserByUserName(username) {
+    async findUserByUserName(username, idUser) {
         try {
             const params = {
                 TableName: this.tableName,
@@ -238,6 +237,8 @@ class UserModel {
                 Limit: 20
             };
             const data = await this.dynamodb.scan(params).promise();
+            // bỏ đi user hiện tại
+            data.Items = data.Items.filter(user => user.idUser !== idUser);
             return data.Items;
         } catch (error) {
             console.error('Error finding user by username:', error);
@@ -370,7 +371,79 @@ class UserModel {
             return [];
         }
     }
-
+    async cancelRequestAddFriend(request) {
+        try {
+            const currentRequests = await this.getCurrentRequests(request.fromUser);
+            const newRequests = currentRequests.filter(req => req.toUser !== request.toUser);
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    idUser: request.fromUser
+                },
+                UpdateExpression: "SET listRequest = :newRequests",
+                ExpressionAttributeValues: {
+                    ":newRequests": newRequests
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result = await this.dynamodb.update(params).promise();
+            const currentRequests2 = await this.getCurrentRequests(request.toUser);
+            const newRequests2 = currentRequests2.filter(req => req.fromUser !== request.fromUser);
+            const params2 = {
+                TableName: this.tableName,
+                Key: {
+                    idUser: request.toUser
+                },
+                UpdateExpression: "SET listRequest = :newRequests",
+                ExpressionAttributeValues: {
+                    ":newRequests": newRequests2
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result2 = await this.dynamodb.update(params2).promise();
+            return result.Attributes;
+        } catch (error) {
+            console.error('Error cancel request add friend:', error);
+            return null;
+        }
+    }
+    async unFriend(idUser, friendId) {
+        console.log(idUser, friendId)
+        try {
+            const currentFriends = await this.getCurrentFriends(idUser);
+            const newFriends = currentFriends.filter(req => req.idUser !== friendId);
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    idUser: idUser
+                },
+                UpdateExpression: "SET listFriend = :newFriends",
+                ExpressionAttributeValues: {
+                    ":newFriends": newFriends
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result = await this.dynamodb.update(params).promise();
+            const currentFriends2 = await this.getCurrentFriends(friendId);
+            const newFriends2 = currentFriends2.filter(req => req.idUser !== idUser);
+            const params2 = {
+                TableName: this.tableName,
+                Key: {
+                    idUser: friendId
+                },
+                UpdateExpression: "SET listFriend = :newFriends",
+                ExpressionAttributeValues: {
+                    ":newFriends": newFriends2
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result2 = await this.dynamodb.update(params2).promise();
+            return result.Attributes;
+        } catch (error) {
+            console.error('Error destroy friend:', error);
+            return null;
+        }
+    }
 
 }
 

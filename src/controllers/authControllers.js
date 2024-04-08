@@ -40,8 +40,6 @@ const login = async (req, res) => {
 
   try {
     const { phone, pass } = req.body;
-    console.log(pass)
-    console.log(await hashPassword(pass));
     const account = await accountModel.findAccountByPhone(phone);
     if (account) {
       const result = await comparePassword(pass, account.pass);
@@ -110,7 +108,6 @@ const createAccount = async (req, res) => {
       return res.status(200).json({ success: true, message: "Create account success" });
     }
   } catch (error) {
-    console.log("Error", error);
     return res.status(500).json({ "Iteration failed": error.message });
   }
 }
@@ -147,7 +144,6 @@ const updateRefreshToken = async (idUser, refreshToken) => {
     };
 
     const user = await dynamodb.get(getUserParams).promise();
-    console.log("User:", user)
 
     if (!user.Item) {
       console.error('User not found');
@@ -169,7 +165,7 @@ const updateRefreshToken = async (idUser, refreshToken) => {
     };
 
     const updatedUser = await dynamodb.update(updateParams).promise();
-    console.log('Refresh token updated:', updatedUser);
+   
 
     return updatedUser;
   } catch (error) {
@@ -204,7 +200,6 @@ const updateAccessToken = async (req, res) => {
 }
 const logout = async (req, res) => {
   const idUser = req.body.idUser
-  console.log("user:"+idUser+" is logout")
   const getUserParams = {
     TableName: userTable,
     Key: {
@@ -241,7 +236,6 @@ const forgotPassword = async (req, res) => {
   const { phone, newPass } = req.body;
   const account = await accountModel.findAccountByPhone(phone);
   if (account) {
-    console.log(account.id)
     const result = await accountModel.changePassword(account.id, await hashPassword(newPass));
     if (result) {
       return res.status(200).json({ success: true, message: "Change password success" });
@@ -254,7 +248,6 @@ const forgotPassword = async (req, res) => {
 }
 const findEmailByPhone = async (req, res) => {
   const phone = req.body.phone;
-  console.log(phone)
   const account = await accountModel.findAccountByPhone(phone);
   if (account) {
     return res.status(200).json({ success: true, message: "Find email success", data: account.email });
@@ -306,7 +299,7 @@ const checkLoginWithToken= async(req, res)=> {
 }
  const checkPhoneExist = async(req, res)=>{
   const phone = req.body.phone;
-  console.log(phone)
+  
   const checkPhone = await dynamodb.scan({ TableName: accountTable, FilterExpression: "phone = :phone", ExpressionAttributeValues: { ":phone": phone } }).promise();
   if (checkPhone.Items.length > 0) {
     return res.status(400).json({ success: false, message: "Phone number already exists" });

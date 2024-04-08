@@ -14,9 +14,10 @@ const {createChat, getChatByUserId} = require('../controllers/chatController')
 const {OTP, verify} = require('../controllers/otpController')
 const {sendRequestAddFriend, getListUserByName, getRequestAddFriendByUserId,
 acceptRequestAddFriend, changeProfile, checkExistRequestAddFriend, reloadUser, getSentRequestAddFriendByUserId,
-getListFriendByUserId
+getListFriendByUserId, cancelRequestAddFriend,
+unFriend
 } = require('../controllers/userController')
-const {loadMessageByChatId, getUserOnline} = require('../controllers/webSocketController')
+const {loadMessageByChatId, getUserOnline, deleteMessageById} = require('../controllers/webSocketController')
 const {uploadAvatar, uploadCoverImage, uploadImageMessage} = require('../controllers/s3Controller');
 const { get } = require('http');
 
@@ -69,6 +70,9 @@ router.post("/acceptRequestAddFriend", acceptRequestAddFriend);
 router.post('/uploadAvatar', upload.single('image'), uploadAvatar);
 // update cover image
 router.post('/uploadCoverImage', upload.single('image'), uploadCoverImage);
+router.post('/uploadAvatarWeb', upload.single('file'), uploadAvatar);
+// update cover image
+router.post('/uploadCoverImageWeb', upload.single('file'), uploadCoverImage);
 // upload image message
 router.post('/uploadImageMessage', upload.single('image'), uploadImageMessage);
 //change profile
@@ -84,5 +88,9 @@ router.post('/getOnline', getUserOnline);
 //tải lại user
 router.post('/reloadUser', reloadUser);
 router.post('/getListFriendByUserId', getListFriendByUserId);
+router.post('/cancelRequestAddFriend', cancelRequestAddFriend);
+router.post('/unFriend', unFriend);
+//xóa tin nhắn
+router.post('/deleteMessageById', deleteMessageById);
 
 module.exports = router;
