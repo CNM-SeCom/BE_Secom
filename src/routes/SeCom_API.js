@@ -18,14 +18,17 @@ getListFriendByUserId, cancelRequestAddFriend,
 unFriend
 } = require('../controllers/userController')
 const {loadMessageByChatId, getUserOnline, deleteMessageById} = require('../controllers/webSocketController')
-const {uploadAvatar, uploadCoverImage, uploadImageMessage} = require('../controllers/s3Controller');
-const { get } = require('http');
+const {uploadAvatar, uploadCoverImage, uploadImageMessage, uploadFile} = require('../controllers/s3Controller');
 
 
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // Giới hạn file 5MB
+});
+const uploadF = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 }, // Giới hạn file 5MB
 });
 
 // Route POST để tạo tài khoản mới
@@ -75,6 +78,7 @@ router.post('/uploadAvatarWeb', upload.single('file'), uploadAvatar);
 router.post('/uploadCoverImageWeb', upload.single('file'), uploadCoverImage);
 // upload image message
 router.post('/uploadImageMessage', upload.single('image'), uploadImageMessage);
+router.post('/uploadImageMessageWeb', upload.single('file'), uploadImageMessage);
 //change profile
 router.post('/changeProfile', changeProfile);
 //checkPhoneExist
@@ -92,5 +96,7 @@ router.post('/cancelRequestAddFriend', cancelRequestAddFriend);
 router.post('/unFriend', unFriend);
 //xóa tin nhắn
 router.post('/deleteMessageById', deleteMessageById);
+//upload file
+router.post('/uploadFile', upload.single('file'), uploadFile);
 
 module.exports = router;

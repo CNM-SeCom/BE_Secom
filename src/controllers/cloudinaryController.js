@@ -16,12 +16,12 @@ const storage = multer.memoryStorage({
     }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage, 
+    limits: { fileSize: 100 * 1024 * 1024 }})
+
 
 const uploadVideoToCloudinary = async (req, res) => {
-
     try {
-   console.log("có network nè")
         fs.writeFileSync('temp_video.mp4', req.file.buffer);
 
         // Upload video lên Cloudinary từ tập tin đã lưu
@@ -37,7 +37,34 @@ const uploadVideoToCloudinary = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Failed to upload video to Cloudinary', error: error.message });
     }
 };
+const uploadFileToCloudinary = async (req, res) => {
+    try {
+        console.log("ahihihi")
+        console.log(req.file)
+        // Ghi tệp vào bộ nhớ
+        fs.writeFileSync('temp_file', req.file.buffer);
+
+        // Tải tệp lên Cloudinary từ tệp đã lưu
+        const result = await cloudinary.uploader.upload('temp_file', {resource_type: 'raw'});
+        console.log("thành công")
+        console.log(result)
+
+        // Xóa tệp tạm thời sau khi upload thành công
+        fs.unlinkSync('temp_file');
+
+        // Trả về URL của tệp đã được upload thành công
+        return res.status(200).json({ success: true, message: 'File uploaded successfully', url: result.secure_url });
+    } catch (error) {
+        console.error('Error uploading file to Cloudinary:', error);
+        return res.status(500).json({ success: false, message: 'Failed to upload file to Cloudinary', error: error.message });
+    }
+};
+
+
 module.exports = {
+    uploadVideoWeb: upload.single('file'),
     uploadVideo: upload.single('video'), // Middleware để xử lý yêu cầu upload video
-    handleUpload: uploadVideoToCloudinary
+    handleUpload: uploadVideoToCloudinary,
+    uploadFile: upload.single('file'),
+    handleUploadFile:uploadFileToCloudinary,
 };

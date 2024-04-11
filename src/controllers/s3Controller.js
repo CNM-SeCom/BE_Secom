@@ -76,9 +76,28 @@ const uploadImageMessage = (req, res) => {
     });
 
 }
+const uploadFile = (req, res) => {
+    const file = req.file;
+    const params = {
+        Bucket: bucketName,
+        Key: `${uuidv4()}-${file.originalname}`,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+        ACL: 'public-read',
+    };
+    s3.upload(params, (s3Err, data) => {
+        if (s3Err) {
+            return res.status(500).json({ success: false, message: "An error occurred while uploading the file to S3" });
+        }
+        console.log(data.Location);
+        return res.status(200).json({ uri: data.Location });
+    });
+
+}
 
 module.exports = {
     uploadAvatar,
     uploadCoverImage,
-    uploadImageMessage
+    uploadImageMessage,
+    uploadFile
 };

@@ -62,7 +62,6 @@ async function handleDisconnection(userId) {
 }
 
 async function sendMessageToUser(receiverId, messageData) {
-    console.log(messageData)
     const messageId = await messageM.getNextId(message_table)
     const message = {
         _id: parseInt(messageId),
@@ -72,7 +71,7 @@ async function sendMessageToUser(receiverId, messageData) {
         type: messageData.type,
         image: messageData.image? messageData.image : null,
         video: messageData.video? messageData.video : null,
-        file: messageData.File? messageData.File : null,
+        file: messageData.file? messageData.file : null,
         user: {
             idUser: messageData.user.idUser.toString(),
             name: messageData.user.name,
@@ -85,12 +84,12 @@ async function sendMessageToUser(receiverId, messageData) {
         clients.get(receiverId).send(JSON.stringify(message));
         const result = await saveMessage(message);
         await chatM.updateLastMessage(messageData.chatId, message);
-        return { success: result, message: 'Message sent to user successfully' };
+        return { success: result, message: 'Message sent to user successfully', data: message };
     }
     else {
         const result = await saveMessage(message);
         await chatM.updateLastMessage(messageData.chatId, message);
-        return { success: result, message: 'Message sent to user successfully' };
+        return { success: result, message: 'Message sent to user successfully', data: message };
     }
 }
 function sendNotifyAddFriendToUser(req,res) {
@@ -157,7 +156,6 @@ function saveMessage(messageData) {
 async function loadMessageByChatId(req, res) {
     const chatId = req.body.chatId;
     const result = await messageM.getMessagesByChatId(chatId);
-    console.log("result:", result)
     return res.status(200).json({ success: true, message: "Lấy danh sách tin nhắn thành công", data: result });
 }
 async function deleteMessageById(req, res) {
