@@ -1,10 +1,14 @@
 const AWS = require('aws-sdk');
 
+
+// const {getChatByChatId} = require('./chatModel');
+
 class UserModel {
     constructor(tableName, dynamodb) {
         this.tableName = tableName;
         this.dynamodb = dynamodb;
     }
+    
 
     async createUser(userData) {
         try {
@@ -37,21 +41,19 @@ class UserModel {
     }
     //lấy danh sách chat
     async getChatByUserId(userId) {
-        try {
-            const params = {
-                TableName: this.tableName,
-                FilterExpression: "idUser = :idUser",
-                ExpressionAttributeValues: {
-                    ":idUser": userId
-                }
-            };
-            const result = await this.dynamodb.scan(params).promise();
-            return result.Items;
-        } catch (error) {
-            console.error('Error retrieving chat:', error);
-            return [];
+        const user = await this.findUserById(userId);
+        let data = [];
+    if (user) {
+        const listChat = user.listChat;
+        for (let i = 0; i < listChat.length; i++) {
+            
+            if (chat) {
+                data.push(chat[0]);
+            }
         }
     }
+    return data
+}
     //update list chat
     async updateListChatByUserId(userId, listChat) {
         try {
@@ -124,6 +126,7 @@ class UserModel {
             };
             const result = await this.dynamodb.update(params).promise();
             const result2 = await this.dynamodb.update(params2).promise();
+            
             return result.Attributes;
         } catch (error) {
             console.error('Error adding friend:', error);
@@ -408,7 +411,6 @@ class UserModel {
         }
     }
     async unFriend(idUser, friendId) {
-        console.log(idUser, friendId)
         try {
             const currentFriends = await this.getCurrentFriends(idUser);
             const newFriends = currentFriends.filter(req => req.idUser !== friendId);

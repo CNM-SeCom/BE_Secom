@@ -26,4 +26,13 @@ router.post('/sendNotifyAcceptFriendToUser',async (req, res) => {
     const result =await webSocketController.sendNotifyAcceptFriendToUser(req, res);
     res.status(result.success ? 200 : 404).json(result);
 });
+router.post('/sendNotifyReloadMessageToUser', (req, res) => {})
+router.post('/sendTypingToUser', (req, res) => {
+    const receiverId = req.body.receiverId;
+    const typing = req.body.typing;
+    const chatId = req.body.chatId;
+    console.log("receiverId:", receiverId)
+    const result = webSocketController.sendTypingToUser(receiverId, chatId, typing);
+    res.status(result.success ? 200 : 404).json(result);
+});
 module.exports = router;

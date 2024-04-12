@@ -110,7 +110,6 @@ function sendNotifyAddFriendToUser(req,res) {
     else {
         return res.status(200).json({ success: false, message: 'User not online' });
     }
-
 }
  function sendNotifyAcceptFriendToUser (req,res) {
     const receiverId = req.body.receiverId;
@@ -121,7 +120,6 @@ function sendNotifyAddFriendToUser(req,res) {
         user:{
             name: from
         }
-
     }
     if (clients.has(receiverId)) {
         clients.get(receiverId).send(JSON.stringify(messageData));
@@ -130,6 +128,34 @@ function sendNotifyAddFriendToUser(req,res) {
     }
     else {
         return res.status(200).json({ success: false, message: 'User not online' });
+    }
+}
+function sendNotifyReloadMessageToUser (receiverId, chatId) {
+    const messageData = {
+        type: "RELOAD_MESSAGE",
+        chatId: chatId,
+    }
+    if (clients.has(receiverId)) {
+        clients.get(receiverId).send(JSON.stringify(messageData));
+        console.log("send notify reload message to user:", receiverId)
+        return true
+    }
+    
+return false
+}
+function sendTypingToUser(receiverId, chatId, typing) {
+    console.log(receiverId)
+    const messageData = {
+        type: "TYPING",
+        typing: typing,
+        chatId: chatId
+    }
+    if (clients.has(receiverId)) {
+        clients.get(receiverId).send(JSON.stringify(messageData));
+        return { success: true, message: 'Message sent to user successfully' };
+    }
+    else {
+        return { success: false, message: 'User not online' };
     }
 
 }
@@ -161,9 +187,11 @@ async function loadMessageByChatId(req, res) {
 async function deleteMessageById(req, res) {
     const messageId = req.body.messageId;
     const result = await messageM.deleteMessageById(messageId);
+    
     if (!result) {
         return res.status(500).json({ success: false, message: "Xóa tin nhắn thất bại" });
     }
+    sendNotifyReloadMessageToUser(req.body.receiverId, req.body.chatId, res);
     return res.status(200).json({ success: true, message: "Xóa tin nhắn thành công" });
 }
 
@@ -175,5 +203,7 @@ module.exports = {
     getUserOnline,
     sendNotifyAddFriendToUser,
     sendNotifyAcceptFriendToUser,
-    deleteMessageById
+    deleteMessageById,
+    sendTypingToUser,
+    
 };

@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 const UserModel = require('./userModel');
+const e = require('cors');
 require('dotenv').config();
 AWS.config.update({
     accessKeyId: process.env.ACCESS_KEY,
@@ -41,11 +42,9 @@ class ChatModel {
                 Item: chatData,
             };
             await this.dynamodb.put(params).promise();
-            console.log("chatData:", chatData.participants.length)
             for (let i = 0; i < chatData.participants.length; i++) {
                 const user = await userM.findUserById(chatData.participants[i].idUser);
                 if (user) {
-                    
                     user.listChat.push(chatData.id);
                     await userM.updateListChatByUserId(user.idUser, user.listChat);
                 }
@@ -156,6 +155,42 @@ class ChatModel {
             return result;
         } catch (error) {
             console.error('Error updating last message:', error);
+            return null;
+        }
+    }
+    async checkExistChatBetweenTwoUsers(idUser1, idUser2) {
+        //load đoạn chat của user 1
+        const listChat1 = await userM.getChatByUserId(idUser1);
+        console.log("listChat1:", listChat1)
+        //duyệt đoạn chat type single, tìm xem có user 2 không
+        for (let i = 0; i < listChat1.length; i++) {
+            if (listChat1[i].type === "single") {
+                for (let j = 0; j < listChat1[i].participants.length; j++) {
+                    if (listChat1[i].participants[j].idUser === idUser2) {
+                        return listChat1[i]
+                    }
+                }
+            }
+        }
+        return null
+    }
+    async setActiveChat(chatId, bl) {
+        try {
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    id: chatId
+                },
+                UpdateExpression: "set active = :active",
+                ExpressionAttributeValues: {
+                    ":active": bl
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result = await this.dynamodb.update(params).promise();
+            return result;
+        } catch (error) {
+            console.error('Error updating active chat:', error);
             return null;
         }
     }

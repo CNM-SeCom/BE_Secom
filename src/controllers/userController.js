@@ -11,6 +11,7 @@ const { name } = require('ejs');
 const chatM = new chatModel(chat_table, dynamodb);
 
 
+
 function generateUUID() {
     return uuidv4();
 }
@@ -54,6 +55,9 @@ async function getListUserByName(req, res) {
 async function acceptRequestAddFriend(req, res) {
     const request = req.body;
     const result = await userM.addFriend(request);
+    const chats = await getChat(request.fromUser, request.toUser);
+    let result2;
+    if(chats===null){
     const id = await chatM.getNextId(chat_table);
     const data1 = {
         idUser: request.fromUser,
@@ -65,7 +69,7 @@ async function acceptRequestAddFriend(req, res) {
         name:   request.nameToUser,
         avatar: request.avatarToUser
     }
-        const chatData = {
+        chatData = {
         id: id.toString(),
         type: "single",
         participants: [data1, data2],
@@ -74,9 +78,15 @@ async function acceptRequestAddFriend(req, res) {
         lastSenderId: data1.idUser,
         lastSenderName: data1.name,
         lastMessageRead: false,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        active: true
     }
-    const result2 = await chatM.saveChat(chatData);
+    result2 = await chatM.saveChat(chatData);
+    }
+    else{
+        await chatM.setActiveChat(chats.id, true);
+    }
+   
     if (!result&&!result2) {
         return res.status(500).json({ success: false, message: "Chấp nhận lời mời kết bạn thất bại" });
     }
@@ -162,10 +172,38 @@ async function cancelRequestAddFriend(req, res) {
 async function unFriend(req, res) {
     const {idUser, friendId} = req.body;
     const result = await userM.unFriend(idUser, friendId);
+    const chat = await getChat(idUser, friendId);
+    console.log(chat)
+    if(chat!==null){
+        const result2 = await chatM.setActiveChat(chat.id, false);
+    }
     if (!result) {
         return res.status(500).json({ success: false, message: "Hủy kết bạn thất bại" });
     }
     return res.status(200).json({ success: true, message: "Hủy kết bạn thành công" });
+}
+async function getChat (userId1, userId2) {
+    const user = await userM.findUserById(userId1);
+    let data = [];
+    if (user) {
+        const listChat = user.listChat;
+        
+        for (let i = 0; i < listChat.length; i++) {
+            const chat = await chatM.getChatByChatId(listChat[i]);
+            if (chat) {
+                data.push(chat[0]);
+            }
+        }
+    }
+   //duyệt trong mảng data xem có đoạn chat type single giữ 2 idUser
+    for (let i = 0; i < data.length; i++) {
+        if (data[i].type === "single") {
+            if ((data[i].participants[0].idUser === userId1) || (data[i].participants[1].idUser === userId2)) {
+                return data[i];
+            }
+        }
+    }
+    return null;
 }
 
 

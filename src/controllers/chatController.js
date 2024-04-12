@@ -32,6 +32,29 @@ async function createChat(req, res) {
         return res.status(500).json({ success: false, message: "Tạo chat thất bại" });
     } 
 }
+async function getChat (userId1, userId2) {
+    const user = await userM.findUserById(userId1);
+    let data = [];
+    if (user) {
+        const listChat = user.listChat;
+        
+        for (let i = 0; i < listChat.length; i++) {
+            const chat = await chatM.getChatByChatId(listChat[i]);
+            if (chat) {
+                data.push(chat[0]);
+            }
+        }
+    }
+   //duyệt trong mảng data xem có đoạn chat type single giữ 2 idUser
+    for (let i = 0; i < data.length; i++) {
+        if (data[i].type === "single") {
+            if ((data[i].participants[0].idUser === userId1) || (data[i].participants[1].idUser === userId2)) {
+                return data[i];
+            }
+        }
+    }
+    return null;
+}
 //get chat by user id
 async function getChatByUserId(req, res) {
     const userId = req.body.idUser;
