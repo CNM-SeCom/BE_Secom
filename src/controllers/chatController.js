@@ -24,37 +24,37 @@ async function createChat(req, res) {
         createdAt: new Date().toISOString()
     }
     const chat = await chatM.saveChat(chatData);
-    //update chat id cho user
-    
     if (chat) {
         return res.status(200).json({ success: true, message: "Tạo chat thành công" });
     } else {
         return res.status(500).json({ success: false, message: "Tạo chat thất bại" });
     } 
 }
-async function getChat (userId1, userId2) {
-    const user = await userM.findUserById(userId1);
-    let data = [];
-    if (user) {
-        const listChat = user.listChat;
-        
-        for (let i = 0; i < listChat.length; i++) {
-            const chat = await chatM.getChatByChatId(listChat[i]);
-            if (chat) {
-                data.push(chat[0]);
-            }
-        }
+async function createGroupChat(req, res) {
+    const { listParticipant, type, name, idAdmin } = req.body;
+    const id = await chatM.getNextId(chat_table);
+     const chatData ={
+        id: id.toString(),
+        type: type,
+        groupName: name,
+        avatar: "https://res.cloudinary.com/dekjrisqs/image/upload/v1712977627/vljmvybzv0orkqwej1tf.png",
+        participants: listParticipant,
+        lastMessage: "Nhóm chat mới",
+        lastMessageTime: new Date().toISOString(),
+        lastMessageId: "",
+        lastSenderId: idAdmin,
+        lastSenderName: name,
+        lastMessageRead: false,
+        createdAt: new Date().toISOString()
     }
-   //duyệt trong mảng data xem có đoạn chat type single giữ 2 idUser
-    for (let i = 0; i < data.length; i++) {
-        if (data[i].type === "single") {
-            if ((data[i].participants[0].idUser === userId1) || (data[i].participants[1].idUser === userId2)) {
-                return data[i];
-            }
-        }
-    }
-    return null;
+    const chat = await chatM.saveChat(chatData);
+    if (chat) {
+        return res.status(200).json({ success: true, message: "Tạo chat thành công" });
+    } else {
+        return res.status(500).json({ success: false, message: "Tạo chat thất bại" });
+    } 
 }
+
 //get chat by user id
 async function getChatByUserId(req, res) {
     const userId = req.body.idUser;
@@ -69,6 +69,7 @@ async function getChatByUserId(req, res) {
                 data.push(chat[0]);
             }
         }
+
         return res.status(200).json({ success: true, message: "Lấy danh sách chat thành công", data: data });
     } else {
         return res.status(500).json({ success: false, message: "Lấy danh sách chat thất bại" });
@@ -76,5 +77,6 @@ async function getChatByUserId(req, res) {
 }
 module.exports = {
     createChat,
-    getChatByUserId
+    getChatByUserId,
+    createGroupChat
 }

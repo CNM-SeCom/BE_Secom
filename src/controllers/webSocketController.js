@@ -62,6 +62,12 @@ async function handleDisconnection(userId) {
 }
 
 async function sendMessageToUser(receiverId, messageData) {
+    //kiểm tra messageData có trường groupName không
+    let groupName=""
+    if (messageData.groupName) {
+        groupName = messageData.groupName
+    }
+    console.log("groupName:", groupName)
     const messageId = await messageM.getNextId(message_table)
     const message = {
         _id: parseInt(messageId),
@@ -78,7 +84,8 @@ async function sendMessageToUser(receiverId, messageData) {
             avatar: messageData.user.avatar
         },
         receiverId: messageData.receiverId,
-        readStatus: false
+        readStatus: false,
+        groupName: groupName
     }
     if (clients.has(receiverId)) {
         clients.get(receiverId).send(JSON.stringify(message));
@@ -144,7 +151,6 @@ function sendNotifyReloadMessageToUser (receiverId, chatId) {
 return false
 }
 function sendTypingToUser(receiverId, chatId, typing) {
-    console.log(receiverId)
     const messageData = {
         type: "TYPING",
         typing: typing,
@@ -155,7 +161,7 @@ function sendTypingToUser(receiverId, chatId, typing) {
         return { success: true, message: 'Message sent to user successfully' };
     }
     else {
-        return { success: false, message: 'User not online' };
+        return { success: true, message: 'User not online' };
     }
 
 }
@@ -187,7 +193,6 @@ async function loadMessageByChatId(req, res) {
 async function deleteMessageById(req, res) {
     const messageId = req.body.messageId;
     const result = await messageM.deleteMessageById(messageId);
-    
     if (!result) {
         return res.status(500).json({ success: false, message: "Xóa tin nhắn thất bại" });
     }

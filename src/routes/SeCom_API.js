@@ -10,7 +10,7 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 const path = require('path');
 const verifyToken = require('../middleware/auth');
-const {createChat, getChatByUserId} = require('../controllers/chatController')
+const {createChat, getChatByUserId, createGroupChat} = require('../controllers/chatController')
 const {OTP, verify} = require('../controllers/otpController')
 const {sendRequestAddFriend, getListUserByName, getRequestAddFriendByUserId,
 acceptRequestAddFriend, changeProfile, checkExistRequestAddFriend, reloadUser, getSentRequestAddFriendByUserId,
@@ -54,6 +54,7 @@ router.post("/sendOTP", OTP);
 router.post("/verifyOTP", verify);
 // router để tạo chat
 router.post("/createChat", createChat);
+router.post("/createGroupChat", createGroupChat);
 //tìm email từ sđt
 router.post("/findEmailByPhone", findEmailByPhone);
 // router gửi lời mời kết bạn

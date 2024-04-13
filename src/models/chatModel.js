@@ -194,6 +194,25 @@ class ChatModel {
             return null;
         }
     }
+    async getLastMessageByChatId(chatId) {
+        try {
+            const params = {
+                TableName: this.tableName,
+                KeyConditionExpression: "#id = :id",
+                ExpressionAttributeNames: {
+                    "#id": "id"
+                },
+                ExpressionAttributeValues: {
+                    ":id": chatId
+                }
+            };
+            const result = await this.dynamodb.query(params).promise();
+            return result.Items[0].lastMessage;
+        } catch (error) {
+            console.error('Error retrieving messages:', error);
+            return [];
+        }
+    }
 
 }
 

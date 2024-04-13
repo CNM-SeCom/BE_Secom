@@ -56,8 +56,9 @@ async function acceptRequestAddFriend(req, res) {
     const request = req.body;
     const result = await userM.addFriend(request);
     const chats = await getChat(request.fromUser, request.toUser);
+    console.log(chats)
     let result2;
-    if(chats===null){
+    if(!chats){
     const id = await chatM.getNextId(chat_table);
     const data1 = {
         idUser: request.fromUser,
@@ -75,8 +76,10 @@ async function acceptRequestAddFriend(req, res) {
         participants: [data1, data2],
         lastMessage: "Đoạn chat mới",
         lastMessageTime: new Date().toISOString(),
+        lastMessageId: "",
         lastSenderId: data1.idUser,
         lastSenderName: data1.name,
+
         lastMessageRead: false,
         createdAt: new Date().toISOString(),
         active: true
@@ -187,13 +190,17 @@ async function getChat (userId1, userId2) {
     let data = [];
     if (user) {
         const listChat = user.listChat;
-        
         for (let i = 0; i < listChat.length; i++) {
             const chat = await chatM.getChatByChatId(listChat[i]);
             if (chat) {
+                for (let j = 0; j < chat[0].participants.length; j++) {
+                    if (chat[0].participants[j].idUser === userId2) {
                 data.push(chat[0]);
             }
         }
+    }
+}
+    
     }
    //duyệt trong mảng data xem có đoạn chat type single giữ 2 idUser
     for (let i = 0; i < data.length; i++) {
