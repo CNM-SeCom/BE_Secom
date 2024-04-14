@@ -8,6 +8,7 @@ const user_table = process.env.USER_TABLE;
 const chatM = new chatModel(chat_table, dynamodb);
 const userModel = require('../models/userModel');
 const userM = new userModel(user_table, dynamodb);
+const webSocketController = require('./webSocketController');
 
 async function createChat(req, res) {
     const { listParticipant, type, lastMessage } = req.body;
@@ -48,7 +49,9 @@ async function createGroupChat(req, res) {
         createdAt: new Date().toISOString()
     }
     const chat = await chatM.saveChat(chatData);
+    const listReceiver = listParticipant.filter(item => item.idUser !== idAdmin);
     if (chat) {
+        await webSocketController.sendReloadConversationToUser(listReceiver);
         return res.status(200).json({ success: true, message: "Tạo chat thành công" });
     } else {
         return res.status(500).json({ success: false, message: "Tạo chat thất bại" });

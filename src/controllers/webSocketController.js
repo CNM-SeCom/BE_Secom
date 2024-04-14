@@ -11,6 +11,7 @@ const messageM = new messageModel(message_table, dynamodb, s3);
 const chatM = new chatModel(chat_table, dynamodb);
 const user_table = process.env.USER_TABLE;
 const userModel = require('../models/userModel');
+const { list } = require('firebase/storage');
 const userM = new userModel(user_table, dynamodb);
 
 
@@ -67,7 +68,6 @@ async function sendMessageToUser(receiverId, messageData) {
     if (messageData.groupName) {
         groupName = messageData.groupName
     }
-    console.log("groupName:", groupName)
     const messageId = await messageM.getNextId(message_table)
     const message = {
         _id: parseInt(messageId),
@@ -147,14 +147,25 @@ function sendNotifyReloadMessageToUser (receiverId, chatId) {
         console.log("send notify reload message to user:", receiverId)
         return true
     }
-    
 return false
 }
-function sendTypingToUser(receiverId, chatId, typing) {
+function sendNotifyReloadMessageToGroup (listReceiver, chatId) {
+    const messageData = {
+        type: "RELOAD_MESSAGE",
+        chatId: chatId,
+    }
+    listReceiver.forEach(receiver => {
+        if (clients.has(receiver.idUser)) {
+            clients.get(receiver.idUser).send(JSON.stringify(messageData));
+        }
+    });
+}
+function sendTypingToUser(receiverId, chatId, typing, userId) {
     const messageData = {
         type: "TYPING",
         typing: typing,
-        chatId: chatId
+        chatId: chatId,
+        userId: userId
     }
     if (clients.has(receiverId)) {
         clients.get(receiverId).send(JSON.stringify(messageData));
@@ -163,21 +174,62 @@ function sendTypingToUser(receiverId, chatId, typing) {
     else {
         return { success: true, message: 'User not online' };
     }
-
+}
+function sendTypingToGroup(listReceiver, chatId, typing, userId) {
+    const messageData = {
+        type: "TYPING",
+        typing: typing,
+        chatId: chatId,
+        userId: userId
+    }
+    listReceiver.forEach(receiver => {
+        if (clients.has(receiver.idUser)) {
+            clients.get(receiver.idUser).send(JSON.stringify(messageData));
+        }
+    });
+    
+}
+function sendReloadConversationToUser(listReceiver) {
+    const messageData = {
+        type: "RELOAD_CONVERSATION",
+    }
+    listReceiver.forEach(receiver => {
+        if (clients.has(receiver.idUser)) {
+            clients.get(receiver.idUser).send(JSON.stringify(messageData));
+        }
+    });
 }
 
-function sendMessageToGroup(groupId, message) {
-    const groupMembers = groups.get(groupId);
-    if (groupMembers) {
-        groupMembers.forEach(memberId => {
-            if (clients.has(memberId)) {
-                clients.get(memberId).send(message);
-            }
-        });
-        return { success: true, message: 'Message sent to group successfully' };
-    } else {
-        return { success: false, message: 'Group not found' };
+async function sendMessageToGroup(listReceiver, messageData, groupId) {
+    const messageId = await messageM.getNextId(message_table)
+    const message = {
+        _id: parseInt(messageId),
+        chatId: messageData.chatId,
+        text: messageData.text,
+        createdAt: new Date().toISOString(),
+        type: messageData.type,
+        image: messageData.image? messageData.image : null,
+        video: messageData.video? messageData.video : null,
+        file: messageData.file? messageData.file : null,
+        user: {
+            idUser: messageData.user.idUser.toString(),
+            name: messageData.user.name,
+            avatar: messageData.user.avatar
+        },
+        receiverId: messageData.receiverId,
+        readStatus: false,
+        groupId: groupId
     }
+    const result = await saveMessage(message);
+    await chatM.updateLastMessage(messageData.chatId, message);
+    listReceiver.forEach(receiver => {
+        if (clients.has(receiver.idUser)) {
+            console.log("đã gửi cho", receiver.idUser)
+            clients.get(receiver.idUser).send(JSON.stringify(message));
+        }
+    });
+        return { success: result, message: 'Message sent to user successfully', data: message };
+    
 }
 //save message to dynamodb
 function saveMessage(messageData) {
@@ -192,12 +244,37 @@ async function loadMessageByChatId(req, res) {
 }
 async function deleteMessageById(req, res) {
     const messageId = req.body.messageId;
+    const listReceiver = req.body.listReceiver;
     const result = await messageM.deleteMessageById(messageId);
     if (!result) {
         return res.status(500).json({ success: false, message: "Xóa tin nhắn thất bại" });
     }
-    sendNotifyReloadMessageToUser(req.body.receiverId, req.body.chatId, res);
+    else{
+    if(listReceiver) {
+        sendNotifyReloadMessageToGroup(listReceiver, req.body.chatId)
+    }
+    else{
+        sendNotifyReloadMessageToUser(req.body.receiverId, req.body.chatId, res);
+    }
+}
+    
+    
     return res.status(200).json({ success: true, message: "Xóa tin nhắn thành công" });
+}
+async function sendNotifyGroupMessage(req,res) {
+    const groupName = req.body.groupName;
+    const listReceiver = req.body.listReceiver;
+    console.log("listReceiver:", listReceiver)
+    const messageData = {
+        type: "GROUP_MESSAGE",
+        groupName: groupName
+    }
+    listReceiver.forEach(receiver => {
+        console.log("receiver:", receiver.idUser)
+        if (clients.has(receiver.idUser)) {
+            clients.get(receiver.idUser).send(JSON.stringify(messageData));
+        }
+    });
 }
 
 module.exports = {
@@ -210,5 +287,11 @@ module.exports = {
     sendNotifyAcceptFriendToUser,
     deleteMessageById,
     sendTypingToUser,
+    sendNotifyReloadMessageToUser,
+    sendReloadConversationToUser,
+    sendNotifyGroupMessage,
+    sendTypingToGroup,
+    sendNotifyReloadMessageToGroup
+
     
 };
