@@ -213,7 +213,128 @@ class ChatModel {
             return [];
         }
     }
+    async addMemberToGroupChat(chatId, listMember) {
+        try {
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    id: chatId
+                },
+                UpdateExpression: "set participants = list_append(participants, :members)",
+                ExpressionAttributeValues: {
+                    ":members": listMember
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result = await this.dynamodb.update(params).promise();
+            return result;
+        } catch (error) {
+            console.error('Error updating participants:', error);
+            return null;
+        }
+    }
+    async leaveOrKickoutGroupChat(chatId, idUser) {
+        try {
+            const chat = await this.getChatByChatId(chatId);
 
+                const participants = chat[0].participants;
+                const newParticipants = participants.filter(participant => participant.idUser !== idUser);
+                const params = {
+                    TableName: this.tableName,
+                    Key: {
+                        id: chatId
+                    },
+                    UpdateExpression: "set participants = :participants",
+                    ExpressionAttributeValues: {
+                        ":participants": newParticipants
+                    },
+                    ReturnValues: "UPDATED_NEW"
+                };
+                const result = await this.dynamodb.update(params).promise();
+                return result;
+            
+        } catch (error) {
+            console.error('Error updating participants:', error);
+            return null;
+        }
+    }
+    async deleteChat(chatId) {
+        try {
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    id: chatId
+                }
+            };
+            const result = await this.dynamodb.delete(params).promise();
+            return result;
+        } catch (error) {
+            console.error('Error deleting chat:', error);
+            return null;
+        }
+    }
+    async setAdminForMembers(chatId, participants) {
+        //duyệt trong participants tìm member, set role = admin
+        try {
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    id: chatId
+                },
+                UpdateExpression: "set participants = :participants",
+                ExpressionAttributeValues: {
+                    ":participants": participants
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result = await this.dynamodb.update(params).promise();
+            return result;
+        } catch (error) {
+            console.error('Error updating participants:', error);
+            return null;
+        }
+    }
+    async changeGroupName(chatId, name) {
+        try {
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    id: chatId
+                },
+                UpdateExpression: "set groupName = :groupName",
+                ExpressionAttributeValues: {
+                    ":groupName": name
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result = await this.dynamodb.update(params).promise();
+            return result;
+        } catch (error) {
+            console.error('Error updating chat name:', error);
+            return null;
+        }
+    }
+    async changeAvatarGroup(chatId, avatar) {
+        try {
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    id: chatId
+                },
+                UpdateExpression: "set avatar = :avatar",
+                ExpressionAttributeValues: {
+                    ":avatar": avatar
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result = await this.dynamodb.update(params).promise();
+            return result;
+        } catch (error) {
+            console.error('Error updating chat avatar:', error);
+            return null;
+        }
+    }
+    
 }
 
 module.exports = ChatModel;

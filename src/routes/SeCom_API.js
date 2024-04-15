@@ -10,7 +10,8 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 const path = require('path');
 const verifyToken = require('../middleware/auth');
-const {createChat, getChatByUserId, createGroupChat} = require('../controllers/chatController')
+const {createChat, getChatByUserId, createGroupChat, addMemberToGroupChat, deleteChat, leaveOrKickoutGroupChat,
+   setAdminForMembers, changeGroupName, changeAvatarGroup} = require('../controllers/chatController')
 const {OTP, verify} = require('../controllers/otpController')
 const {sendRequestAddFriend, getListUserByName, getRequestAddFriendByUserId,
 acceptRequestAddFriend, changeProfile, checkExistRequestAddFriend, reloadUser, getSentRequestAddFriendByUserId,
@@ -99,5 +100,15 @@ router.post('/unFriend', unFriend);
 router.post('/deleteMessageById', deleteMessageById);
 //upload file
 router.post('/uploadFile', upload.single('file'), uploadFile);
+//group
+router.post('/addMemberToGroupChat', addMemberToGroupChat);
+router.post('/leaveOrKickoutGroupChat', leaveOrKickoutGroupChat);
+router.post('/deleteChat', deleteChat);
+router.post('/setAdminForMember', setAdminForMembers);
+//change group name
+router.post('/changeGroupName', changeGroupName);
+router.post('/changeAvatarGroup',  changeAvatarGroup);
+
+
 
 module.exports = router;

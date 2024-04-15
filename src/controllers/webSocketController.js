@@ -200,7 +200,7 @@ function sendReloadConversationToUser(listReceiver) {
     });
 }
 
-async function sendMessageToGroup(listReceiver, messageData, groupId) {
+async function sendMessageToGroup(listReceiver, messageData, groupId,participants) {
     const messageId = await messageM.getNextId(message_table)
     const message = {
         _id: parseInt(messageId),
@@ -218,13 +218,15 @@ async function sendMessageToGroup(listReceiver, messageData, groupId) {
         },
         receiverId: messageData.receiverId,
         readStatus: false,
-        groupId: groupId
+        groupId: groupId,
+        participants: messageData.participants? messageData.participants : null,
+        idKickOut: messageData.idKickOut? messageData.idKickOut : null,
+        groupName: messageData.groupName? messageData.groupName : null
     }
     const result = await saveMessage(message);
     await chatM.updateLastMessage(messageData.chatId, message);
     listReceiver.forEach(receiver => {
         if (clients.has(receiver.idUser)) {
-            console.log("đã gửi cho", receiver.idUser)
             clients.get(receiver.idUser).send(JSON.stringify(message));
         }
     });
@@ -276,7 +278,60 @@ async function sendNotifyGroupMessage(req,res) {
         }
     });
 }
-
+async function sendNotifyUpdateGroup(req,res) {
+    const chatId = req.body.chatId;
+    const listReceiver = req.body.listReceiver;
+    const messageData = {
+        type: "UPDATE_GROUP",
+        chatId: chatId
+    }
+    listReceiver.forEach(receiver => {
+        if (clients.has(receiver.idUser)) {
+            clients.get(receiver.idUser).send(JSON.stringify(messageData));
+        }
+    });
+}
+async function sendNotifyKickOutGroup(req,res) {
+    const chatId = req.body.chatId;
+    const receiverId = req.body.receiverId;
+    const messageData = {
+        type: "KICKOUTED",
+        chatId: chatId,
+        text:'Bạn đã bị đuổi khỏi nhóm'
+    }
+    if (clients.has(receiverId)) {
+        clients.get(receiverId).send(JSON.stringify(messageData));
+        return res.status(200).json({ success: true, message: 'Message sent to user successfully' });
+    }
+}
+async function sendNotifyDeleteGroup(req,res) {
+    const chatId = req.body.chatId;
+    const listReceiver = req.body.listReceiver;
+    const messageData = {
+        type: "DELETE_GROUP",
+        chatId: chatId
+    }
+    listReceiver.forEach(receiver => {
+        if (clients.has(receiver.idUser)) {
+            clients.get(receiver.idUser).send(JSON.stringify(messageData));
+        }
+    });
+}
+async function sendNotifyUpdateMember(req,res) {
+    const chatId = req.body.chatId;
+    const listReceiver = req.body.listReceiver;
+    const status = req.body.status;
+    const messageData = {
+        type: "UPDATE_MEMBER",
+        chatId: chatId,
+        status: status
+    }
+    listReceiver.forEach(receiver => {
+        if (clients.has(receiver.idUser)) {
+            clients.get(receiver.idUser).send(JSON.stringify(messageData));
+        }
+    });
+}
 module.exports = {
     handleConnection,
     sendMessageToUser,
@@ -291,7 +346,12 @@ module.exports = {
     sendReloadConversationToUser,
     sendNotifyGroupMessage,
     sendTypingToGroup,
-    sendNotifyReloadMessageToGroup
+    sendNotifyReloadMessageToGroup,
+    sendNotifyUpdateGroup,
+    sendNotifyKickOutGroup,
+    sendNotifyDeleteGroup,
+    sendNotifyUpdateMember
+    
 
     
 };

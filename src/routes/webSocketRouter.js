@@ -27,6 +27,22 @@ router.post('/sendNotifyAcceptFriendToUser',async (req, res) => {
     res.status(result.success ? 200 : 404).json(result);
 });
 router.post('/sendNotifyReloadMessageToUser', (req, res) => {})
+//group
+router.post('/sendNotifyAddMemberToGroup', (req, res) => {
+    const result = webSocketController.sendNotifyAddMemberToGroup(req, res);
+    res.status(result.success ? 200 : 404).json(result);
+})
+
+router.post('/sendNotifySetAdminForMembers', (req, res) => {
+    const result = webSocketController.sendNotifySetAdminForMembers(req, res);
+    res.status(result.success ? 200 : 404).json(result);
+})
+//update member
+router.post('/sendNotifyUpdateMember', (req, res) => {
+    const result = webSocketController.sendNotifyUpdateMember(req, res);
+    res.status(result.success ? 200 : 404).json(result);
+})
+
 
 
 router.post('/sendTypingToUser', (req, res) => {

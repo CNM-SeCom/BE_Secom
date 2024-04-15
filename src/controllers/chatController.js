@@ -78,8 +78,76 @@ async function getChatByUserId(req, res) {
         return res.status(500).json({ success: false, message: "Lấy danh sách chat thất bại" });
     }
 }
+async function addMemberToGroupChat(req, res) {
+    const { chatId, listMember } = req.body;
+    const result = await chatM.addMemberToGroupChat(chatId, listMember);
+    await listMember.forEach((item) => {
+        userM.addChat(item.idUser, chatId);
+    })
+    if (result) {
+        return res.status(200).json({ success: true, message: "Thêm thành viên vào nhóm thành công" });
+    } else {
+        return res.status(500).json({ success: false, message: "Thêm thành viên vào nhóm thất bại" });
+    }
+}
+async function leaveOrKickoutGroupChat(req, res) {
+    const { chatId, idUser } = req.body;
+    const result = await chatM.leaveOrKickoutGroupChat(chatId, idUser);
+    await userM.removeChat(idUser, chatId);
+    if (result) {
+        return res.status(200).json({ success: true, message: "Rời nhóm thành công" });
+    } else {
+        return res.status(500).json({ success: false, message: "Rời nhóm thất bại" });
+    }
+}
+async function deleteChat(req, res) {
+    const { chatId } = req.body;
+    const chat = await chatM.getChatByChatId(chatId);
+    chat[0].participants.forEach(async (item)=>{
+        await userM.removeChat(item.idUser, chatId)
+})
+    const result = await chatM.deleteChat(chatId);
+    if (result) {
+        return res.status(200).json({ success: true, message: "Xóa chat thành công" });
+    } else {
+        return res.status(500).json({ success: false, message: "Xóa chat thất bại" });
+    }
+}
+async function setAdminForMembers(req, res) {
+    const { chatId,  listParticipant } = req.body;
+    const result = await chatM.setAdminForMembers(chatId, listParticipant);
+    if (result) {
+        return res.status(200).json({ success: true, message: "Đặt quyền admin thành công" });
+    } else {
+        return res.status(500).json({ success: false, message: "Đặt quyền admin thất bại" });
+    }
+}
+async function changeGroupName(req, res) {
+    const { chatId, groupName } = req.body;
+    const result = await chatM.changeGroupName(chatId, groupName);
+    if (result) {
+        return res.status(200).json({ success: true, message: "Đổi tên nhóm thành công" });
+    } else {
+        return res.status(500).json({ success: false, message: "Đổi tên nhóm thất bại" });
+    }
+}
+async function changeAvatarGroup(req, res) {
+    const { chatId, avatar } = req.body;
+    const result = await chatM.changeAvatarGroup(chatId, avatar);
+    if (result) {
+        return res.status(200).json({ success: true, message: "Đổi ảnh nhóm thành công" });
+    } else {
+        return res.status(500).json({ success: false, message: "Đổi ảnh nhóm thất bại" });
+    }
+}
 module.exports = {
     createChat,
     getChatByUserId,
-    createGroupChat
+    createGroupChat,
+    addMemberToGroupChat,
+    leaveOrKickoutGroupChat,
+    deleteChat,
+    setAdminForMembers,
+    changeGroupName,
+    changeAvatarGroup
 }

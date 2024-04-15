@@ -446,7 +446,53 @@ class UserModel {
             return null;
         }
     }
-
+    async removeChat(idUser, chatId) {
+        try {
+            const user = await this.findUserById(idUser);
+            const listChat = user.listChat;
+            const newListChat = listChat.filter(chat => chat !== chatId);
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    idUser: idUser
+                },
+                UpdateExpression: "SET listChat = :newListChat",
+                ExpressionAttributeValues: {
+                    ":newListChat": newListChat
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result = await this.dynamodb.update(params).promise();
+            console.log("xóa thành công")
+            return result.Attributes;
+        } catch (error) {
+            console.error('Error remove chat:', error);
+            return null;
+        }
+    }
+    async addChat(idUser, chatId) {
+        try {
+            const user = await this.findUserById(idUser);
+            const listChat = user.listChat;
+            listChat.push(chatId);
+            const params = {
+                TableName: this.tableName,
+                Key: {
+                    idUser: idUser
+                },
+                UpdateExpression: "SET listChat = :listChat",
+                ExpressionAttributeValues: {
+                    ":listChat": listChat
+                },
+                ReturnValues: "UPDATED_NEW"
+            };
+            const result = await this.dynamodb.update(params).promise();
+            return result.Attributes;
+        } catch (error) {
+            console.error('Error add chat:', error);
+            return null;
+        }
+    }
 }
 
 module.exports = UserModel;
