@@ -332,6 +332,20 @@ async function sendNotifyUpdateMember(req,res) {
         }
     });
 }
+async function sendNotifyCallVideo(req,res) {
+    const receiverId = req.body.receiverId;
+    const stringeeData = req.body.stringeeData;
+    console.log("stringeeData:", stringeeData)
+    console.log("receiverId:", receiverId)
+    const messageData = {
+        type: "CALL_VIDEO",
+        data: stringeeData
+    }
+
+        if (clients.has(receiverId)) {
+            clients.get(receiverId).send(JSON.stringify(messageData));
+        }
+}
 module.exports = {
     handleConnection,
     sendMessageToUser,
@@ -350,7 +364,8 @@ module.exports = {
     sendNotifyUpdateGroup,
     sendNotifyKickOutGroup,
     sendNotifyDeleteGroup,
-    sendNotifyUpdateMember
+    sendNotifyUpdateMember,
+    sendNotifyCallVideo
     
 
     

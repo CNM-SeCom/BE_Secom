@@ -20,7 +20,7 @@ unFriend
 } = require('../controllers/userController')
 const {loadMessageByChatId, getUserOnline, deleteMessageById} = require('../controllers/webSocketController')
 const {uploadAvatar, uploadCoverImage, uploadImageMessage, uploadFile} = require('../controllers/s3Controller');
-
+const {getCallAccessToken} = require('../controllers/stringeeController');
 
 
 const upload = multer({
@@ -108,6 +108,7 @@ router.post('/setAdminForMember', setAdminForMembers);
 //change group name
 router.post('/changeGroupName', changeGroupName);
 router.post('/changeAvatarGroup',  changeAvatarGroup);
+router.post('/getCallAccessToken', getCallAccessToken)
 
 
 

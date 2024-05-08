@@ -40,12 +40,17 @@ const login = async (req, res) => {
 
   try {
     const { phone, pass } = req.body;
+    console.log("+++++++++++++=")
+    console.log(phone, pass)
     const account = await accountModel.findAccountByPhone(phone);
+    console.log(account)
     if (account) {
       const result = await comparePassword(pass, account.pass);
       if (result) {
         const userId = account.idUser;
+        console.log(userId)
         const userData = await userModel.findUserById(userId);
+        console.log(userData)
         // if(userData.refreshToken != ""){
         //   const checkRefreshToken = checkRefreshTokenExpiration(userData.refreshToken);
         //   if(!checkRefreshToken){
@@ -234,6 +239,7 @@ const changePassword = async (req, res) => {
 }
 const forgotPassword = async (req, res) => {
   const { phone, newPass } = req.body;
+  console.log(phone)
   const account = await accountModel.findAccountByPhone(phone);
   if (account) {
     const result = await accountModel.changePassword(account.id, await hashPassword(newPass));

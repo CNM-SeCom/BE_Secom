@@ -64,4 +64,8 @@ router.post('/sendNotifyGroupMessage', (req, res) => {
     const result = webSocketController.sendNotifyGroupMessage(req, res);
     res.status(200)
 })
+router.post('/sendNotifyCallVideo', (req, res) => {
+    const result = webSocketController.sendNotifyCallVideo(req, res);
+    res.status(200)
+})
 module.exports = router;
