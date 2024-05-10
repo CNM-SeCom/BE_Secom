@@ -12,6 +12,7 @@ const chatM = new chatModel(chat_table, dynamodb);
 const user_table = process.env.USER_TABLE;
 const userModel = require('../models/userModel');
 const { list } = require('firebase/storage');
+const { name } = require('ejs');
 const userM = new userModel(user_table, dynamodb);
 
 
@@ -334,12 +335,12 @@ async function sendNotifyUpdateMember(req,res) {
 }
 async function sendNotifyCallVideo(req,res) {
     const receiverId = req.body.receiverId;
-    const stringeeData = req.body.stringeeData;
-    console.log("stringeeData:", stringeeData)
-    console.log("receiverId:", receiverId)
+    const callerId = req.body.callerId;
+  
     const messageData = {
         type: "CALL_VIDEO",
-        data: stringeeData
+        data: callerId,
+        name: req.body.name
     }
 
         if (clients.has(receiverId)) {
