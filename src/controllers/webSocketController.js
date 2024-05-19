@@ -100,6 +100,35 @@ async function sendMessageToUser(receiverId, messageData) {
         return { success: result, message: 'Message sent to user successfully', data: message };
     }
 }
+async function sendMessageCallToUser(listReceiver, messageData) {
+    const messageId = await messageM.getNextId(message_table)
+    const message = {
+        _id: parseInt(messageId),
+        chatId: messageData.chatId,
+        text: messageData.text,
+        createdAt: new Date().toISOString(),
+        type: messageData.type,
+        image: messageData.image? messageData.image : null,
+        video: messageData.video? messageData.video : null,
+        file: messageData.file? messageData.file : null,
+        user: {
+            idUser: messageData.user.idUser.toString(),
+            name: messageData.user.name,
+            avatar: messageData.user.avatar
+        },
+        receiverId: messageData.receiverId,
+        readStatus: false,
+    }
+    listReceiver.forEach(receiver => {
+        if (clients.has(receiver)) {
+            clients.get(receiver).send(JSON.stringify(message));
+        }
+    }
+);
+    const result = await saveMessage(message);
+    await chatM.updateLastMessage(messageData.chatId, message);
+return { success: true, message: 'Message sent to user successfully', data: message };
+}
 function sendNotifyAddFriendToUser(req,res) {
     const receiverId = req.body.receiverId;
     const from = req.body.name;
@@ -366,7 +395,8 @@ module.exports = {
     sendNotifyKickOutGroup,
     sendNotifyDeleteGroup,
     sendNotifyUpdateMember,
-    sendNotifyCallVideo
+    sendNotifyCallVideo,
+    sendMessageCallToUser
     
 
     

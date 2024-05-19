@@ -10,6 +10,14 @@ router.post('/send-message-to-user', async (req, res) => {
     const result = await webSocketController.sendMessageToUser(receiverId, message);
     res.status(result.success ? 200 : 404).json(result);
 });
+router.post('/send-message-call-to-user', async (req, res) => {
+    const listReceiver = req.body.listReceiver;
+    console.log("listReceiver:", listReceiver)
+    const message = req.body.message;
+    const result = await webSocketController.sendMessageCallToUser(listReceiver, message);
+    res.status(result.success ? 200 : 404).json(result);
+});
+
 
 // Endpoint API để gửi tin nhắn cho một nhóm người dùng
 router.post('/send-message-to-group/:groupId',async (req, res) => {
