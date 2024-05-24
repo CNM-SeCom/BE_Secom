@@ -143,7 +143,7 @@ function sendNotifyAddFriendToUser(req,res) {
     if (clients.has(receiverId)) {
         clients.get(receiverId).send(JSON.stringify(messageData));
     }
-    return res.status(200).json({ success: true, message: 'Message sent to user successfully' });
+    return res.status(200).json({ success: true, message: 'Message sent to user successfully', data: messageData });
 
 }
  function sendNotifyAcceptFriendToUser (req,res) {
