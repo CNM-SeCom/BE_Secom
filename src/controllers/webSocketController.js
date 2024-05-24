@@ -131,7 +131,9 @@ return { success: true, message: 'Message sent to user successfully', data: mess
 }
 function sendNotifyAddFriendToUser(req,res) {
     const receiverId = req.body.receiverId;
+    console.log("receiverId:", receiverId)
     const from = req.body.name;
+
     const messageData = {
         type: "ADD_FRIEND",
         text: from + " đã gửi lời mời kết bạn", 
