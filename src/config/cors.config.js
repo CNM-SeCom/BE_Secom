@@ -1,10 +1,10 @@
 const corsOptions = {
-    origin: 'http://localhost:5173',
+    origin: '*', // Cho phép tất cả các nguồn
     optionSuccessStatus: 200,
-    methods: ['POST'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Origin'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Các phương thức HTTP cho phép
+    allowedHeaders: ['Content-Type', 'Authorization'], // Các header được phép
     credentials: true,
     preflightContinue: true,
-}
+};
 
 module.exports = { corsOptions }
