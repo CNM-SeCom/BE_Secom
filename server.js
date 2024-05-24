@@ -15,13 +15,16 @@ const wsRoutes = require('./src/routes/webSocketRouter');
 const webSocketController = require('./src/controllers/webSocketController');
 
 const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
-const wss = new WebSocket.Server({ port: 3001 });
 app.use(cors())
 app.use('/', ApiRouter);
 app.use('/cloudinary', cloudinaryRouter);
 app.use('/ws', wsRoutes);
+
+// Xử lý kết nối WebSocket trong cùng một file
 wss.on('connection', webSocketController.handleConnection);
-app.listen(PORT, () => {
+
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
